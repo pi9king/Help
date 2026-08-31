@@ -1,0 +1,42 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c8dcbf9a8c3b8ff48b339a53ff63a3b0, type: 3}
+  m_Name: RoomContentLibrary
+  m_EditorClassIdentifier: Help::Help.Dungeon.RoomContentLibrary
+  _entries:
+  - type: 0
+    contentPrefabs:
+    - {fileID: 2291685455212660322, guid: 3f5b1dd6ae924594d99e4535654b5aa5, type: 3}
+  - type: 1
+    contentPrefabs:
+    - {fileID: 8515560847060754301, guid: e23f1f2b3958ba345af92026894734c5, type: 3}
+  - type: 2
+    contentPrefabs:
+    - {fileID: 8515560847060754301, guid: e23f1f2b3958ba345af92026894734c5, type: 3}
+  - type: 3
+    contentPrefabs:
+    - {fileID: 8515560847060754301, guid: e23f1f2b3958ba345af92026894734c5, type: 3}
+  - type: 8
+    contentPrefabs:
+    - {fileID: 6618546062940137605, guid: 0892d9dcfe4bf9849a057dc39a7e79cb, type: 3}
+  - type: 6
+    contentPrefabs:
+    - {fileID: 8844570626322011446, guid: b874c0c2541e9844c81a5c19f879bb67, type: 3}
+  - type: 4
+    contentPrefabs:
+    - {fileID: 3741202493200686176, guid: ca07ca16d55109a46a0fa6823fee9109, type: 3}
+  - type: 5
+    contentPrefabs:
+    - {fileID: 3741202493200686176, guid: ca07ca16d55109a46a0fa6823fee9109, type: 3}
+  - type: 7
+    contentPrefabs:
+    - {fileID: 983791559019355675, guid: 5fb79d1d77b107645b533780a3308d7a, type: 3}

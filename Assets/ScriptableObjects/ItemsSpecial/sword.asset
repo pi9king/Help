@@ -1,0 +1,36 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ed359aea1797a8f429ac67059553b2de, type: 3}
+  m_Name: sword
+  m_EditorClassIdentifier: Help::Help.Item.ItemDefinition
+  Id: sword
+  Word: SWORD
+  Type: 1
+  Element: 0
+  WeaponCategory: 1
+  Capabilities: 
+  Recipe:
+  - Material: 17
+    Count: 1
+  - Material: 21
+    Count: 1
+  - Material: 13
+    Count: 1
+  - Material: 16
+    Count: 1
+  - Material: 3
+    Count: 1
+  AttackBonus: 14
+  DefenseBonus: 0
+  AttackSpeedMult: 1
+  HealAmount: 0
+  GoldCost: 40

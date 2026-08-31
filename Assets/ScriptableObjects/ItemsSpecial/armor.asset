@@ -1,0 +1,34 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ed359aea1797a8f429ac67059553b2de, type: 3}
+  m_Name: armor
+  m_EditorClassIdentifier: Help::Help.Item.ItemDefinition
+  Id: armor
+  Word: ARMOR
+  Type: 4
+  Element: 0
+  WeaponCategory: 0
+  Capabilities: 
+  Recipe:
+  - Material: 0
+    Count: 1
+  - Material: 16
+    Count: 2
+  - Material: 11
+    Count: 1
+  - Material: 13
+    Count: 1
+  AttackBonus: 0
+  DefenseBonus: 8
+  AttackSpeedMult: 1
+  HealAmount: 0
+  GoldCost: 35
