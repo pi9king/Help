@@ -91,7 +91,37 @@ UNITY="C:/Program Files/Unity/Hub/Editor/6000.3.10f1/Editor/Unity.exe"
 3. 콘텐츠 저작 시작(방/퍼즐/적을 데이터로) 또는 설계 미결(속성↔능력 매핑) 확정.
 
 ---
+
+## 11. 2026-09-02 추가 — 레벨 디자인 기반 + AI 아트 파이프라인
+
+**EditMode 353개 통과, 컴파일 경고 0. 런타임(Play) 실측은 아직 안 함 — 아래 ⚠ 참고.**
+
+| 추가된 것 | 요약 |
+|---|---|
+| 점프 물리 재조정 | gravityScale 1→2.85. 점프 높이 9.9→**3.51타일**(정점 0.5초). 가변점프·코요테 0.1초·점프버퍼 0.12초. 이전엔 방(9타일)을 통째로 뛰어넘어 지형 설계가 불가능했다 |
+| 방 크기 등급 | Small 25×15 / Wide 51×15 / Tall 25×31. 보스=Wide 고정, 시작=Small 고정, 나머지 24% 확률 |
+| 카메라 | `CameraFollow`가 방 경계 안에서만 추적(Small은 중앙 고정). ortho 7.5. `CameraShake`는 위치 대신 오프셋만 발행하도록 분리 |
+| **ASCII 방 템플릿** | `Assets/Rooms/*.txt`. 지형 7문자 + 마커 7종 + 확률 문자 2종. 파서·해석기·라이브러리 |
+| 지형 어휘 확장 | 일방통행 발판(별도 Tilemap + PlatformEffector2D), 가시·구덩이(`RoomHazard`가 실제 판정) |
+| **도달성 자동 검증** | `ReachabilityAnalyzer` — 근사식이 아니라 실제 물리 시뮬레이션. `RoomTemplateReachabilityTests`가 전 템플릿을 확률 양극단으로 검사 |
+| 에디터 뷰어 | Help ▸ Level ▸ Room Template Viewer — 지형 그림 + 도달성 오버레이 + 칸 클릭 탐침 |
+| 템플릿 10장 | Tutorial/Combat×3/EnvPuzzle/PurePuzzle/CombatPuzzle/Treasure/Secret/Boss |
+| **AI 아트 파이프라인** | `ArtSource/raw/`에 넣고 Help ▸ Art ▸ Process Art Source. 배경제거→트림→최빈색 축소→팔레트 양자화(OkLab)→아웃라인→임포트 |
+| 마커 기반 콘텐츠 스폰 | 구현됐으나 **기본 꺼짐**(`RoomContentLibrary.useTemplateMarkers`). 방 유형별로 하나씩 켜서 옮긴다 |
+
+**⚠ 이번 작업분의 미검증 항목** — 전부 Play로 눈으로 봐야 한다:
+1. 점프 손맛(3.5타일 도달, 짧게 누르면 낮게, 난간 끝 코요테 점프)
+2. Small 방이 화면에 정확히 맞는지 / Wide·Tall에서 카메라가 방 밖을 안 비추는지
+3. 일방통행 발판을 아래에서 통과하는지
+4. 가시·구덩이 판정(피해량·입구 복귀)
+5. 뷰어의 도달성 표시가 실제 Play와 일치하는지
+
+**시작 순서**: Help ▸ Setup ▸ Generate Placeholder Sprites → Help ▸ Setup ▸ Setup Room Templates → Play.
+
+---
 ### 문서 지도
+- `LEVEL_DESIGN.md` — **방 지형 문법·아스키 템플릿·도달성 검증** (레벨 저작 시 여기부터)
+- `ART_PIPELINE.md` — **AI 아트 생성 → 픽셀 스프라이트 후처리·프롬프트북**
 - `DESIGN.md` — 게임 규칙·결정 로그 (*결정된 것*)
 - `OPEN_QUESTIONS.md` — 미결 고민 (*아직 정하지 않은 것*: 분해 희소화, 특수방 상점, 층 테마, 보스 보상 등)
 - `ARCHITECTURE.md` — 시스템 구조·파일 구조·결정 로그

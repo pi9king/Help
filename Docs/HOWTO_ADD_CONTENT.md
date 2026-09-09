@@ -37,11 +37,31 @@ public enum Capability { None, BreakWall, CrossGap, Melt, Conduct, /* ← 여기
 
 ## 5. ★ 방 콘텐츠 저작 (데이터 스폰 — 씬 손배치 대신)
 적/퍼즐/루팅은 **방 유형별 콘텐츠 프리팹**으로 데이터 저작한다. 씬에 직접 놓지 않는다.
-1. **콘텐츠 프리팹** 만들기: 빈 GameObject 아래에 적/장애물/RoomPuzzle을 **방 중심(원점) 기준 localPosition**으로 배치(예 벽 x=2). `Assets/Prefabs/RoomContent/Room_Combat.prefab`·`Room_Puzzle.prefab` 참고.
+1. **콘텐츠 프리팹** 만들기: 빈 GameObject 아래에 적/장애물/RoomPuzzle을 **방 바닥 가운데 기준 localPosition**으로 배치. `Assets/Prefabs/RoomContent/Room_Combat.prefab`·`Room_Puzzle.prefab` 참고.
+
+   > ⚠ **원점은 방 중심이 아니라 방 바닥이다.** `RoomManager`가 콘텐츠 루트를
+   > `RoomGeometry.ContentOriginY(방 높이)`(= 바닥 칸의 윗면)에 놓는다.
+   > 바닥에 서는 물건은 `y = 콜라이더 높이 / 2` (1타일 적이면 `y=0.5`, 2타일 문이면 `y=1`).
+   >
+   > 방 중심 기준으로 잡으면 **방 크기 등급(Small 15 / Tall 31)이 달라지는 순간 전부 공중에 뜬다.**
+   > 2026-09에 실제로 이 사고가 났다 — 방이 9칸에서 15칸으로 높아지면서 첫 방의
+   > K·Y와 잠긴 문이 3타일 떠올라 튜토리얼이 통째로 깨졌다. `RoomGeometryTests`가 그 재발을 막는다.
 2. **라이브러리 등록**: `Assets/ScriptableObjects/RoomContentLibrary.asset`의 Entries에 `RoomType → 콘텐츠 프리팹(들)` 추가. 여러 개 넣으면 방마다 결정적으로 하나 선택된다.
 3. 끝. `RoomManager`가 방 로드 시 유형에 맞는 콘텐츠를 스폰하고, 방 이동/사망 리셋 시 자동 교체·재스폰한다.
 - 셋업 재생성 메뉴: **Help/Setup/Setup Data-Driven Room Content** (빌딩블록 프리팹 → 콘텐츠 프리팹 + 라이브러리 + RoomManager 연결).
-- (현 한계) 콘텐츠 배치는 프리팹 안에서 손으로. 스폰 포인트/가중치 랜덤은 아직 없음 — 필요해지면 확장.
+- **스폰 포인트**: 방 템플릿의 마커(`e E x l c b`) 위치에 개별 프리팹을 스폰하는 경로가 있다.
+  `RoomContentLibrary`의 방 유형 항목에서 `useTemplateMarkers`를 켜고 마커별 프리팹을 등록하면 된다.
+  **기본은 꺼짐** — 기존에 검증된 손배치 경로를 그대로 두고 방 유형별로 하나씩 옮기기 위해서다.
+
+## 5.5. ★ 방 지형 저작 (ASCII 템플릿) — 상세는 `Docs/LEVEL_DESIGN.md`
+방의 **생김새**(발판·단차·구덩이)는 `Assets/Rooms/{RoomType}_{SizeClass}_{NN}.txt`에 아스키로 그린다.
+1. 텍스트로 그린다 — `#`벽 `=`지면 `-`발판 `.`빈칸 `^`가시 `~`구덩이 `D`문 / 마커 `p e E x l c b` / 확률 `? %`
+   (손 타이핑은 줄 길이가 어긋나기 쉽다 — `Tools/gen_rooms.py`처럼 스탬프로 찍는 편이 안전)
+2. 눈으로 본다 — **Help/Level/Room Template Viewer** (도달성 오버레이: 초록=갈 수 있음, 빨강=못 감)
+3. 검증한다 — EditMode 테스트가 `Assets/Rooms/*.txt` **전량**을 확률 양극단으로 자동 검사
+4. 연결한다 — **Help/Setup/Setup Room Templates** (파일명에서 방 유형을 읽어 라이브러리 등록 + 씬 배선)
+- **문법 요약**: 단차 3타일까지 오름(4타일부터 벽) · 갭 5칸까지 점프(6~7칸 대시) · 통로 높이 2칸 이상
+- 템플릿이 없는 (유형, 크기) 조합은 예전 절차적 셸로 폴백된다 — 게임이 멈추지 않는다.
 
 ## 6. 스프라이트 추가/교체
 `Assets/Editor/SpriteGenerator.cs`가 프로시저럴 PNG를 만든다(플레이어=E 글리프 등). 실제 아트는 `Assets/Sprites/*.png`를 같은 이름으로 덮어쓰면 교체됨(임포트 설정: Sprite, PPU 32, Point). 메뉴 **Help/Setup/Generate Placeholder Sprites**.
@@ -69,4 +89,7 @@ public enum Capability { None, BreakWall, CrossGap, Melt, Conduct, /* ← 여기
 - **Generate Placeholder Sprites** — PNG 스프라이트
 - **Create Building Block Prefabs** — Enemy/BreakableWall/IceWall/RoomPuzzle
 - **Setup Data-Driven Room Content** — 콘텐츠 프리팹 + 라이브러리 + RoomManager 연결
+- **Setup Room Templates** — `Assets/Rooms/*.txt` → RoomTemplateLibrary + 씬 배선
+- **Help/Level/Room Template Viewer** — 방 템플릿 뷰어 + 도달성 검증
+- **Help/Art/Process Art Source** — AI 아트 후처리(`Docs/ART_PIPELINE.md`)
 - **Assign RecipeDatabase to Scene GameManager**
