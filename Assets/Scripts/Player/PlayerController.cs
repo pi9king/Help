@@ -13,13 +13,21 @@ namespace Help.Player
         [SerializeField] private LayerMask _groundLayer;
         [SerializeField] private Transform _groundCheck;
         [SerializeField] private float _groundCheckRadius = 0.1f;
-        [SerializeField] private float _dashDuration = 0.15f;
+        [SerializeField] private float _dashDuration = DefaultDashDuration;
         [SerializeField] private float _dashCooldown = 0.8f;
         [SerializeField] private float _attackDuration = 0.3f;
         [SerializeField] private float _invulnDuration = 0.6f;   // 피격 후 무적시간(i-frame)
         [SerializeField] private float _knockbackForce = 6f;     // 피격 시 밀려나는 수평 힘
         [SerializeField] private float _knockbackUp = 3f;        // 피격 시 살짝 뜨는 수직 힘
         [SerializeField] private float _knockbackStun = 0.18f;   // 넉백 속도를 유지할 시간(이동 입력 무시)
+
+        // --- 점프 손맛 (레벨 디자인 문법의 근거 — PlatformerMetrics와 짝을 이룬다) ---
+        [SerializeField] private float _fallMultiplier = PlatformerMetrics.DefaultFallMultiplier; // 낙하 가속 배수
+        [SerializeField] private float _shortHopFactor = 0.4f;   // 점프 버튼을 일찍 떼면 상승 속도를 이만큼으로 자른다
+        [SerializeField] private float _coyoteTime = 0.10f;      // 발판에서 떨어진 직후에도 점프 허용
+        [SerializeField] private float _jumpBufferTime = 0.12f;  // 착지 직전 입력한 점프를 착지 순간 발화
+
+        public const float DefaultDashDuration = 0.15f;
 
         private Rigidbody2D _rb;
         private PlayerStats _stats;
@@ -28,11 +36,16 @@ namespace Help.Player
 
         private Vector2 _moveInput;
         private bool _isGrounded;
+        private bool _airDashUsed;   // D-3: 공중 대시는 착지할 때까지 1회
         private float _dashTimer;
         private float _dashCooldownTimer;
         private float _attackTimer;
         private float _invulnTimer;
         private float _knockbackTimer;
+        private float _coyoteTimer;
+        private float _jumpBufferTimer;
+        private bool _jumpActive;             // 이번 상승이 "점프"인가(넉백 상승은 자르지 않기 위해)
+        private InputAction _jumpAction;      // 가변 점프용 — Button 액션은 release 메시지가 오지 않아 직접 폴링한다
         private int _facingDir = 1;
 
         // 현재 장착 무기 속성 (크래프팅 시스템과 연동)
@@ -67,7 +80,18 @@ namespace Help.Player
 
         private void Awake()
         {
+            // D-1: 벽에 걸려 미끄러지지 않도록 마찰 0 (Help.Core.PhysicsMaterials)
+            Help.Core.PhysicsMaterials.ApplyFrictionless(gameObject);
             _rb = GetComponent<Rigidbody2D>();
+            // 중력은 코드가 소유한다 — 씬/프리팹 값이 PlatformerMetrics와 어긋나면
+            // 도달성 검증이 통과한 방을 실제로는 못 도는 사태가 난다.
+            _rb.gravityScale = PlatformerMetrics.DefaultGravityScale;
+
+            // Button 액션은 SendMessages로 canceled가 오지 않는다(Value 액션만).
+            // 버튼을 떼는 순간을 알려면 액션을 직접 들고 폴링해야 한다.
+            var input = GetComponent<PlayerInput>();
+            if (input != null && input.actions != null) _jumpAction = input.actions.FindAction("Jump");
+
             _stats = new PlayerStats();
             _stats.OnDied += HandleDeath;
             _flash = GetComponentInChildren<Help.Combat.HitFlash>();
@@ -132,7 +156,46 @@ namespace Help.Player
             UpdateFacing();
         }
 
-        private void FixedUpdate() => ApplyMotion();
+        private void FixedUpdate()
+        {
+            TryConsumeBufferedJump();
+            ApplyMotion();
+            ApplyJumpShaping();
+        }
+
+        // 점프 버튼이 눌려 있는가. 배선이 없으면(테스트/에디터) "누르고 있다"로 봐서 상승을 자르지 않는다.
+        private bool JumpHeld => _jumpAction == null || _jumpAction.IsPressed();
+
+        // 버퍼에 남은 점프 입력을 코요테 시간 안이면 발화시킨다.
+        private void TryConsumeBufferedJump()
+        {
+            if (_jumpBufferTimer <= 0f || _coyoteTimer <= 0f || UiBlocking) return;
+
+            _jumpBufferTimer = 0f;
+            _coyoteTimer = 0f;   // 같은 점프를 두 번 쓰지 못하게(공중 이중점프 방지)
+            _jumpActive = true;
+            _rb.linearVelocity = new Vector2(_rb.linearVelocity.x, _stats.JumpForce);
+            _state = PlayerState.Jumping;
+        }
+
+        // 상승↔낙하 비대칭이 플랫포머 손맛의 핵심 — 내려올 때 더 빨리 떨어뜨리고,
+        // 버튼을 일찍 뗀 점프는 상승을 잘라 낮은 점프가 되게 한다.
+        private void ApplyJumpShaping()
+        {
+            float vy = _rb.linearVelocity.y;
+
+            if (vy < 0f)
+            {
+                _jumpActive = false;
+                float extra = Physics2D.gravity.y * _rb.gravityScale * (_fallMultiplier - 1f) * Time.fixedDeltaTime;
+                _rb.linearVelocity = new Vector2(_rb.linearVelocity.x, vy + extra);
+            }
+            else if (vy > 0f && _jumpActive && !JumpHeld)
+            {
+                _jumpActive = false;
+                _rb.linearVelocity = new Vector2(_rb.linearVelocity.x, vy * _shortHopFactor);
+            }
+        }
 
         // 상태별 이동 적용(enum + switch 컨벤션). 상태가 수평 속도의 소유권을 갖는 지점 —
         // 새 이동 상태(스윙 등)는 여기에 case를 더한다.
@@ -161,16 +224,17 @@ namespace Help.Player
         // Input System 콜백
         public void OnMove(InputValue value) => _moveInput = value.Get<Vector2>();
 
+        // 입력은 버퍼에만 기록하고 실제 발화는 FixedUpdate에서 — 착지 직전에 누른 점프도 살린다.
         public void OnJump(InputValue value)
         {
-            if (!value.isPressed || !_isGrounded || UiBlocking) return;
-            _rb.linearVelocity = new Vector2(_rb.linearVelocity.x, _stats.JumpForce);
-            _state = PlayerState.Jumping;
+            if (!value.isPressed || UiBlocking) return;
+            _jumpBufferTimer = _jumpBufferTime;
         }
 
         public void OnDash(InputValue value)
         {
-            if (!value.isPressed || _dashCooldownTimer > 0 || UiBlocking) return;
+            if (!value.isPressed || UiBlocking) return;
+            if (!DashRule.CanDash(_isGrounded, _airDashUsed, _dashCooldownTimer)) return;
             StartDash();
         }
 
@@ -231,6 +295,7 @@ namespace Help.Player
 
         private void StartDash()
         {
+            if (!_isGrounded) _airDashUsed = true;
             _state = PlayerState.Dashing;
             _dashTimer = _dashDuration;
             _dashCooldownTimer = _dashCooldown;
@@ -254,6 +319,12 @@ namespace Help.Player
             }
             if (_invulnTimer > 0) _invulnTimer -= Time.deltaTime;
             if (_knockbackTimer > 0) _knockbackTimer -= Time.deltaTime;
+
+            // 접지 중엔 코요테 시간을 계속 채우고, 떨어지면 소진시킨다.
+            if (_isGrounded) { _coyoteTimer = _coyoteTime; _airDashUsed = false; } // 착지 = 공중 대시 충전
+            else if (_coyoteTimer > 0) _coyoteTimer -= Time.deltaTime;
+
+            if (_jumpBufferTimer > 0) _jumpBufferTimer -= Time.deltaTime;
         }
 
         private void UpdateFacing()
