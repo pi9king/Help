@@ -62,6 +62,7 @@ namespace Help.Enemy
         private readonly EnemyAI _ai = new EnemyAI();
         private EnemyMeleeAttack _melee;
         private HitFlash _flash;
+        private EnemyAnimatorDriver _anim;
         private float _patrolAnchorX;
         private float _hitstunTimer;
         private Vector3 _spawnPosition;
@@ -82,6 +83,10 @@ namespace Help.Enemy
 
             _flash = GetComponentInChildren<HitFlash>();
             if (_flash == null) _flash = gameObject.AddComponent<HitFlash>();
+
+            _anim = GetComponent<EnemyAnimatorDriver>();
+            if (_anim == null && GetComponentInChildren<Animator>() != null)
+                _anim = gameObject.AddComponent<EnemyAnimatorDriver>();
 
             _spawnPosition = transform.position;
             _patrolAnchorX = transform.position.x;
@@ -113,6 +118,7 @@ namespace Help.Enemy
             _melee.Reset();
             Status.Reset();  // 상태이상 잔존 방지 — 부활한 적이 속박된 채 시작하지 않도록
             _hitstunTimer = 0f;
+            _anim?.ResetToIdle();
             transform.position = _spawnPosition;
             Rb.linearVelocity = Vector2.zero;
         }
@@ -128,6 +134,7 @@ namespace Help.Enemy
             if (_hitstunTimer > 0f)
             {
                 _hitstunTimer -= dt;
+                _anim?.Apply(true, true, _melee.Phase, 0f);
                 return;
             }
 
@@ -143,6 +150,9 @@ namespace Help.Enemy
                 ApplyMovement(decision);
 
             if (result.Strike) DoAttack();
+
+            // 판정이 다 끝난 뒤 그 결과를 그린다(표시는 항상 판정을 뒤따른다).
+            _anim?.Apply(true, false, _melee.Phase, decision.MoveDir);
         }
 
         // AI 결정을 실제 물리 이동으로 적용. 외력(끌어당김)이 AI 의도를 덮어쓰는 단일 지점.
@@ -235,6 +245,7 @@ namespace Help.Enemy
         private void HandleDeath()
         {
             Rb.linearVelocity = Vector2.zero;
+            _anim?.Apply(false, false, MeleePhase.Ready, 0f); // Destroy 지연 0.5초 동안 재생
             DropLoot();
             DropRewards();
             OnDied?.Invoke(this); // 방 클리어 집계 통지
