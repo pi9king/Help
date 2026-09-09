@@ -12,6 +12,11 @@ namespace Help.Combat
         private float _duration;
         private float _intensity;
         private Vector3 _baseLocalPos;
+        private Vector3 _shakeOffset;
+        private bool _applySelf;   // 카메라 위치를 소유한 컴포넌트가 없을 때만 직접 적용
+
+        // 이번 프레임의 흔들림 변위. 카메라 위치를 소유하는 쪽(CameraFollow)이 더해 쓴다.
+        public static Vector3 Offset => _instance != null ? _instance._shakeOffset : Vector3.zero;
 
         // 정적 진입점 — 필요 시 메인 카메라에 컴포넌트를 붙여 흔든다.
         public static void ShakeMain(float intensity, float duration)
@@ -30,7 +35,13 @@ namespace Help.Combat
             return _instance;
         }
 
-        private void Awake() => _instance = this;
+        private void Awake()
+        {
+            _instance = this;
+            // CameraFollow가 붙어 있으면 그쪽이 위치를 소유한다 —
+            // 둘 다 transform을 쓰면 추적 중 흔들림이 카메라를 방 밖으로 끌고 간다.
+            _applySelf = GetComponent<Help.Core.CameraFollow>() == null;
+        }
 
         private void Begin(float intensity, float duration)
         {
@@ -46,12 +57,14 @@ namespace Help.Combat
             _timer -= Time.unscaledDeltaTime;
             if (_timer <= 0f)
             {
-                transform.localPosition = _baseLocalPos;
+                _shakeOffset = Vector3.zero;
+                if (_applySelf) transform.localPosition = _baseLocalPos;
                 _intensity = 0f;
                 return;
             }
             float mag = _intensity * (_timer / _duration); // 시간에 따라 감쇠
-            transform.localPosition = _baseLocalPos + (Vector3)(Random.insideUnitCircle * mag);
+            _shakeOffset = Random.insideUnitCircle * mag;
+            if (_applySelf) transform.localPosition = _baseLocalPos + _shakeOffset;
         }
     }
 }

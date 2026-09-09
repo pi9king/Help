@@ -16,6 +16,9 @@ namespace Help.Dungeon
         public int X { get; }
         public int Y { get; }
         public RoomType Type { get; }
+
+        // 방의 물리적 크기 등급. 생성기가 배정하고 RoomManager/카메라가 읽는다.
+        public RoomSizeClass SizeClass { get; set; } = RoomSizeClass.Small;
         public List<EntryCondition> EntryConditions { get; } = new();
         // 이 방을 클리어하면 확정 지급되는 재료 (자유 방일 때 층 재료 풀 계산에 사용).
         // 재료 보장 불변식의 "검증 대상" — 진입 열쇠 제작에 필요한 재료만 여기에 들어가며,
