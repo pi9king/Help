@@ -30,7 +30,11 @@ namespace Help.Editor
             }
 
             // 전투 방: 3종(그런트/아처/브루트)을 배치. 유형 프리팹이 없으면 기본 Enemy로 대체.
-            var grunt = Load("Assets/Prefabs/Enemy_Grunt.prefab") ?? enemy;
+            //
+            // 그런트 자리는 LayerLab 아트 샘플(Enemy_Ant)이 있으면 그걸 먼저 쓴다 —
+            // 새 아트가 실제로 게임에 나오는지 확인하는 경로다(없으면 기존 Grunt로 폴백).
+            var grunt = Load("Assets/Prefabs/Enemy_Ant.prefab")
+                     ?? Load("Assets/Prefabs/Enemy_Grunt.prefab") ?? enemy;
             var archer = Load("Assets/Prefabs/Enemy_Archer.prefab") ?? enemy;
             var brute = Load("Assets/Prefabs/Enemy_Brute.prefab") ?? enemy;
             if (grunt == enemy)
@@ -38,26 +42,26 @@ namespace Help.Editor
 
             // 전투 방: 적 전멸 게이트(EnemyClearObjective + RoomPuzzle)를 루트에 부착 → 다 죽여야 출구 열림.
             var combat = BuildContent("Room_Combat", new (GameObject, Vector3)[] {
-                (grunt, new Vector3(2f, -2f, 0f)),
-                (archer, new Vector3(6f, -2f, 0f)),
-                (brute, new Vector3(-3f, -2f, 0f)),
+                (grunt, new Vector3(2f, 1f, 0f)),
+                (archer, new Vector3(6f, 1f, 0f)),
+                (brute, new Vector3(-3f, 1f, 0f)),
             }, withClearGate: true);
             var puzzle = BuildContent("Room_Puzzle", new (GameObject, Vector3)[] {
-                (breakable, new Vector3(2f, -2f, 0f)),
-                (ice, new Vector3(-2f, -2f, 0f)),
+                (breakable, new Vector3(2f, 1f, 0f)),
+                (ice, new Vector3(-2f, 1f, 0f)),
             });
 
             // 보스 방: 보스 1기 + 적 전멸 게이트(보스 처치=방 클리어). 보스 프리팹 없으면 브루트로 대체.
             var boss = Load("Assets/Prefabs/Enemy_Boss.prefab") ?? brute;
             var bossRoom = BuildContent("Room_Boss", new (GameObject, Vector3)[] {
-                (boss, new Vector3(0f, -1.5f, 0f)),
+                (boss, new Vector3(0f, 1.5f, 0f)),
             }, withClearGate: true);
 
             // 보물/상점 방: 빈 방 방지용 재료 픽업 몇 개(상점 시스템 전까지 임시 보상 방).
             var treasure = BuildPickupContent("Room_Treasure", new (Help.Item.AlphabetMaterial, Vector3)[] {
-                (Help.Item.AlphabetMaterial.A, new Vector3(-2f, -2.5f, 0f)),
-                (Help.Item.AlphabetMaterial.S, new Vector3(0f, -2.5f, 0f)),
-                (Help.Item.AlphabetMaterial.R, new Vector3(2f, -2.5f, 0f)),
+                (Help.Item.AlphabetMaterial.A, new Vector3(-2f, 0.5f, 0f)),
+                (Help.Item.AlphabetMaterial.S, new Vector3(0f, 0.5f, 0f)),
+                (Help.Item.AlphabetMaterial.R, new Vector3(2f, 0.5f, 0f)),
             });
 
             // 튜토리얼 첫 방: 전투 없이 K·Y 글자를 주워 KEY를 만들도록 유도
@@ -101,6 +105,12 @@ namespace Help.Editor
                 var gso = new SerializedObject(gm);
                 var seedProp = gso.FindProperty("_seedStarterMaterials");
                 if (seedProp != null) seedProp.boolValue = false;
+
+                // 던전 생성기가 "이 방 콘텐츠가 요구하는 능력"을 읽어 진입 조건으로 삼는다.
+                // 이게 비어 있으면 능력 조건이 안 붙어 도구 없이 퍼즐 방에 들어가게 된다.
+                var libProp = gso.FindProperty("_contentLibrary");
+                if (libProp != null) libProp.objectReferenceValue = lib;
+
                 gso.ApplyModifiedProperties();
             }
             RemoveSceneObject("Enemy");
@@ -120,7 +130,9 @@ namespace Help.Editor
             return go;
         }
 
-        // 콘텐츠 프리팹 = 방 중심(원점) 기준 자식 배치. 빌딩블록을 네스티드 프리팹 인스턴스로 담는다.
+        // 콘텐츠 프리팹 = **방 바닥 가운데**를 원점으로 한 자식 배치(RoomGeometry.ContentOriginY).
+        // 방 중심 기준으로 잡으면 방 크기 등급이 바뀔 때 전부 공중에 뜬다.
+        // 바닥에 서는 물건은 y = 콜라이더 높이/2. 빌딩블록을 네스티드 프리팹 인스턴스로 담는다.
         // withClearGate=true면 루트에 적 전멸 게이트(EnemyClearObjective+RoomPuzzle)를 붙여 전투 방 출구를 잠근다.
         static GameObject BuildContent(string name, (GameObject prefab, Vector3 localPos)[] items, bool withClearGate = false)
         {
@@ -156,16 +168,17 @@ namespace Help.Editor
             return asset;
         }
 
-        // 튜토리얼 콘텐츠 = 방 중심 기준으로 K·Y 글자 줍기 + 잠긴 문(KEY로 열기)을 배치.
+        // 튜토리얼 콘텐츠 = 방 바닥 기준으로 K·Y 글자 줍기 + 잠긴 문(KEY로 열기)을 배치.
+        // 왼쪽부터 플레이어 시작 → K → Y → 잠긴 문 순서로 놓아 진행 방향이 읽히게 한다.
         // 흐름: K·Y 주움 → KEY 제작·장착 → 문에 Use(F/우클릭)로 Unlock 적용 → 출구 잠금 해제 → E로 다음 방.
         static GameObject BuildTutorialContent(string name)
         {
             var root = new GameObject(name);
-            CreatePickup(root.transform, Help.Item.AlphabetMaterial.K, new Vector3(-2.5f, -2.5f, 0f));
-            CreatePickup(root.transform, Help.Item.AlphabetMaterial.Y, new Vector3(2.5f, -2.5f, 0f));
+            CreatePickup(root.transform, Help.Item.AlphabetMaterial.K, new Vector3(-4f, 0.5f, 0f));
+            CreatePickup(root.transform, Help.Item.AlphabetMaterial.Y, new Vector3(0f, 0.5f, 0f));
 
             // 잠긴 문(Unlock 요구) + RoomPuzzle(문 해제 전까지 방 출구 잠금)
-            var door = CreateLockedDoor(root.transform, new Vector3(4f, -2.5f, 0f));
+            var door = CreateLockedDoor(root.transform, new Vector3(4f, 1f, 0f));
             CreateRoomPuzzle(root.transform, door);
 
             string path = $"{Dir}/{name}.prefab";
@@ -181,11 +194,11 @@ namespace Help.Editor
         {
             var root = new GameObject(name);
 
-            CreateMarker(root.transform, "RewardChest", new Vector3(-2.5f, -2.5f, 0f),
+            CreateMarker(root.transform, "RewardChest", new Vector3(-2.5f, 1f, 0f),
                 "상자", new Color(1f, 0.84f, 0.2f), new Vector2(1.5f, 2f))
                 .AddComponent<Help.Dungeon.SpecialRewardChest>();
 
-            CreateMarker(root.transform, "CraftingStation", new Vector3(2.5f, -2.5f, 0f),
+            CreateMarker(root.transform, "CraftingStation", new Vector3(2.5f, 1.5f, 0f),
                 "특수 제작대", new Color(0.6f, 0.8f, 1f), new Vector2(3f, 3f))
                 .AddComponent<Help.Dungeon.SpecialCraftingStation>();
 
@@ -223,9 +236,16 @@ namespace Help.Editor
             return go;
         }
 
-        // 잠긴 문: 능력 타깃(Unlock 요구) + 솔리드 콜라이더(플레이어가 문 앞에서 막혀 서게 해 F가 확실히 맞도록;
-        // 해제 시 오브젝트가 비활성돼 통과 가능) + 글자 표시.
-        // ※ 트리거로 두면 플레이어가 문을 뚫고 지나가 벽까지 걸어가서 전방 Use 스캔이 문을 놓친다(2026-07-23 수정).
+        // 잠긴 문 = 방 전체의 봉인. 이 문 하나를 열면 방의 **모든 출구**가 열린다
+        // (RoomPuzzle → RoomManager.SetExitLock 해제). 방 하나에 자물쇠 하나라는 규칙이라,
+        // 출구마다 따로 열쇠를 요구하지 않는다.
+        //
+        // 솔리드 콜라이더인 이유: 트리거로 두면 플레이어가 문을 뚫고 벽까지 걸어가서
+        // 전방 Use 스캔이 문을 놓친다(2026-07-23 실측). 막아 세워야 F가 확실히 맞는다.
+        //
+        // 표시는 문 스프라이트로 한다 — 예전엔 "잠긴 문"이라는 글자가 월드에 떠 있었는데,
+        // 방의 진짜 출구가 이미 같은 자물쇠 타일로 잠김을 보여주고 있어서 글자는
+        // 중복인 데다 정체도 모호했다. 같은 그림을 쓰면 "저 자물쇠를 풀면 저 자물쇠가 풀린다"가 읽힌다.
         static Help.Puzzle.CapabilityTarget CreateLockedDoor(Transform parent, Vector3 localPos)
         {
             var go = new GameObject("LockedDoor");
@@ -242,19 +262,32 @@ namespace Help.Editor
             if (capProp != null) capProp.enumValueIndex = (int)Help.Item.Capability.Unlock; // 값==인덱스(연속 enum)
             so.ApplyModifiedPropertiesWithoutUndo();
 
-            var textGo = new GameObject("Label");
-            textGo.transform.SetParent(go.transform, false);
-            var tm = textGo.AddComponent<TextMesh>();
-            tm.text = "잠긴 문";
-            tm.characterSize = 0.15f;
-            tm.fontSize = 64;
-            tm.anchor = TextAnchor.MiddleCenter;
-            tm.alignment = TextAlignment.Center;
-            tm.color = new Color(1f, 0.4f, 0.4f);
-            var mr = textGo.GetComponent<MeshRenderer>();
-            if (mr != null) mr.sortingOrder = 10;
-
+            AddDoorSprite(go);
             return target;
+        }
+
+        // 출구 타일과 같은 자물쇠 그림을 콜라이더(1×2) 크기에 맞춰 붙인다.
+        // 스프라이트가 없으면(플레이스홀더 미생성 상태) 조용히 건너뛴다 — 판정은 그대로 동작한다.
+        static void AddDoorSprite(GameObject go)
+        {
+            var sprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/tile_door_locked.png");
+            if (sprite == null)
+            {
+                Debug.LogWarning("[Help] tile_door_locked.png 없음 — Help/Setup/Generate Placeholder Sprites 먼저 실행");
+                return;
+            }
+
+            var art = new GameObject("Art");
+            art.transform.SetParent(go.transform, false);
+
+            var sr = art.AddComponent<SpriteRenderer>();
+            sr.sprite = sprite;
+            sr.sortingOrder = 5;
+
+            // 스프라이트 1장 = 1×1 월드 유닛(PPU 32, 32px). 문은 1×2라 세로로 늘린다.
+            float w = sprite.bounds.size.x, h = sprite.bounds.size.y;
+            if (w > 0.0001f && h > 0.0001f)
+                art.transform.localScale = new Vector3(1f / w, 2f / h, 1f);
         }
 
         // 방 퍼즐: 잠긴 문을 목표로 등록 → 미해결 시 방 출구를 잠근다(RoomManager는 런타임 자동 탐색).
@@ -265,6 +298,12 @@ namespace Help.Editor
 
             var puzzle = go.AddComponent<Help.Puzzle.RoomPuzzle>();
             var so = new SerializedObject(puzzle);
+
+            // 튜토리얼 방은 진입 조건이 없지만 K·Y가 방 안에 있어 스스로 풀 수 있다 →
+            // 조건 없이도 출구를 잠글 자격이 있다(RoomGating). 생성된 퍼즐 방은 이 플래그를 켜지 않는다.
+            var selfContained = so.FindProperty("_selfContained");
+            if (selfContained != null) selfContained.boolValue = true;
+
             var targets = so.FindProperty("_targets");
             targets.arraySize = 1;
             targets.GetArrayElementAtIndex(0).objectReferenceValue = target;

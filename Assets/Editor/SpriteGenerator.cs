@@ -25,11 +25,19 @@ namespace Help.Editor
             var wall = SaveSprite("tile_wall", BuildWall());
             var doorOpen = SaveSprite("tile_door_open", BuildDoor(true));
             var doorLocked = SaveSprite("tile_door_locked", BuildDoor(false));
+            var platform = SaveSprite("tile_platform", BuildPlatform());
+            var spike = SaveSprite("tile_spike", BuildSpike());
 
             AssignTile("Assets/Tilemaps/FloorTile.asset", floor);
             AssignTile("Assets/Tilemaps/WallTile.asset", wall);
             AssignTile("Assets/Tilemaps/DoorOpenTile.asset", doorOpen);
             AssignTile("Assets/Tilemaps/DoorLockedTile.asset", doorLocked);
+
+            // 지형 어휘 확장분(템플릿의 '-', '^').
+            // 발판은 콜라이더가 있어야 딛고 서고, 피해 바닥은 RoomHazard가 판정하므로 콜라이더가 없다.
+            // D-12로 가시/구덩이를 합쳐 피해 바닥 타일 하나만 쓴다.
+            Help.EditorTools.PixelImport.EnsureTile("PlatformTile", platform, Tile.ColliderType.Grid);
+            Help.EditorTools.PixelImport.EnsureTile("HazardTile", spike, Tile.ColliderType.None);
 
             AssignSceneSprite("Player", player);
             AssignSceneEnemy(enemy);
@@ -37,7 +45,8 @@ namespace Help.Editor
             AssetDatabase.SaveAssets();
             EditorSceneManager.MarkAllScenesDirty();
             EditorSceneManager.SaveOpenScenes();
-            Debug.Log("[Help] Placeholder sprites generated and assigned (player_E, enemy, floor, wall, doors).");
+            Debug.Log("[Help] Placeholder sprites generated and assigned " +
+                      "(player_E, enemy, floor, wall, doors, platform, hazard).");
         }
 
         // --- 픽셀 드로잉 ---
@@ -148,6 +157,41 @@ namespace Help.Editor
             }
             return px;
         }
+
+        // 일방통행 발판 — 위쪽 면이 두껍고 아래는 비어 보이게(통과 가능함을 시각적으로 알린다)
+        static Color32[] BuildPlatform()
+        {
+            var px = New(Clear);
+            var wood = new Color32(150, 106, 62, 255);
+            var edge = new Color32(96, 66, 38, 255);
+            var top = new Color32(186, 140, 88, 255);
+            Rect(px, 0, 22, S - 1, 31, wood);
+            Rect(px, 0, 28, S - 1, 31, top);
+            Rect(px, 0, 22, S - 1, 23, edge);
+            for (int x = 4; x < S; x += 8) Rect(px, x, 24, x + 1, 27, edge);
+            return px;
+        }
+
+        // 가시 — 바닥에서 솟은 삼각형 톱니
+        static Color32[] BuildSpike()
+        {
+            var px = New(Clear);
+            var baseCol = new Color32(70, 74, 84, 255);
+            var metal = new Color32(196, 202, 214, 255);
+            Rect(px, 0, 0, S - 1, 5, baseCol);
+            for (int t = 0; t < 4; t++)
+            {
+                int cx = 4 + t * 8;
+                for (int h = 0; h < 18; h++)
+                {
+                    int half = Mathf.Max(0, 4 - h / 4);
+                    Rect(px, cx - half, 5 + h, cx + half, 5 + h, metal);
+                }
+            }
+            return px;
+        }
+
+        // 구덩이 — 아래로 뚫린 어둠. 바닥 타일과 확실히 구분돼야 실수로 밟지 않는다.
 
         // --- PNG 저장 + 임포트 ---
 

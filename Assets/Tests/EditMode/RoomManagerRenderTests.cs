@@ -10,7 +10,10 @@ namespace Tests.EditMode
     // GameManager에 의존하는 Start()는 호출하지 않고 LoadMap/EnterRoom을 직접 부른다.
     public class RoomManagerRenderTests
     {
-        private const int W = 13, H = 9;
+        // 방 크기는 RoomDimensions가 소유한다 — 여기서 하드코딩하면 규격 변경 때 조용히 어긋난다.
+        private static readonly RoomDim Dim = RoomDimensions.Of(RoomSizeClass.Small);
+        private static int W => Dim.Width;
+        private static int H => Dim.Height;
 
         private static int Occupied(Tilemap tilemap)
         {
@@ -109,8 +112,8 @@ namespace Tests.EditMode
             try
             {
                 rm.LoadMap(map);
-                // 동쪽 문 위치 = (W-1 - W/2, SideDoorRow - H/2) = (6, 1-4) = (6, -3) — 바닥 바로 위
-                Assert.AreEqual(doorTile, tilemap.GetTile(new Vector3Int(6, 1 - H / 2, 0)),
+                // 동쪽 문 위치 = (W-1 - W/2, SideDoorRow - H/2) — 바닥 바로 위
+                Assert.AreEqual(doorTile, tilemap.GetTile(new Vector3Int((W - 1) - W / 2, 1 - H / 2, 0)),
                     "연결된 동쪽 문에 열린 문 타일이 표시되지 않음");
             }
             finally
@@ -119,6 +122,39 @@ namespace Tests.EditMode
                 Object.DestroyImmediate(rmGo);
                 Object.DestroyImmediate(tile);
                 Object.DestroyImmediate(doorTile);
+            }
+        }
+
+        // 크기 등급이 실제 렌더에 반영되는지 — Wide 방은 Small보다 넓게 그려져야 한다.
+        [Test]
+        public void RenderRoom_UsesSizeClassDimensions()
+        {
+            var tmGo = new GameObject("tm", typeof(Grid), typeof(Tilemap));
+            var tilemap = tmGo.GetComponent<Tilemap>();
+            var rmGo = new GameObject("rm");
+            var rm = rmGo.AddComponent<RoomManager>();
+            var tile = ScriptableObject.CreateInstance<Tile>();
+            SetPrivate(rm, "_tilemap", tilemap);
+            SetPrivate(rm, "_floorTile", tile);
+            SetPrivate(rm, "_wallTile", tile);
+
+            var wide = RoomDimensions.Of(RoomSizeClass.Wide);
+            var map = new DungeonMap((0, 0));
+            map.AddRoom(new Room(0, 0, RoomType.Boss) { SizeClass = RoomSizeClass.Wide });
+
+            try
+            {
+                rm.LoadMap(map);
+                Assert.AreEqual(2 * wide.Width + 2 * (wide.Height - 2), Occupied(tilemap));
+                // 넓은 방의 끝 벽은 Small 방 범위 밖에 있어야 한다
+                Assert.IsNotNull(tilemap.GetTile(new Vector3Int((wide.Width - 1) - wide.Width / 2, 0, 0)),
+                    "Wide 방의 오른쪽 벽이 그려지지 않음");
+            }
+            finally
+            {
+                Object.DestroyImmediate(tmGo);
+                Object.DestroyImmediate(rmGo);
+                Object.DestroyImmediate(tile);
             }
         }
 

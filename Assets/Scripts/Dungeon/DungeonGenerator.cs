@@ -23,6 +23,7 @@ namespace Help.Dungeon
         // 층에 특수방이 등장할 확률. 만나는 것 자체가 행운인 보너스 방이라 항상 나오지는 않는다.
         public const double SecretRoomChance = 0.4;
 
+
         private Random _rng;
 
         // 조건/루트 없는 순수 레이아웃 (하위호환)
@@ -35,7 +36,11 @@ namespace Help.Dungeon
         // 진입 조건 + 재료 보장 불변식까지 만족하는 층 생성.
         // 조건부 방에 (제작 가능한 능력에서) 조건을 부여하고, 자유 방에 필요 재료를 배치한 뒤
         // FloorValidator로 검증한다. 실패하면 다른 시드로 재시도, 끝까지 실패하면 조건 없는 층으로 폴백.
-        public DungeonMap Generate(DungeonConfig config, RecipeDatabase database)
+        // capabilitiesOf: 방 유형 → 그 방 콘텐츠가 요구하는 능력들.
+        // 진입 조건을 **콘텐츠에서 역산**해 레이어1(입장)과 레이어2(클리어)를 일치시킨다.
+        // null이면 능력 조건 없이 예전처럼 동작한다(테스트·헤드리스용).
+        public DungeonMap Generate(DungeonConfig config, RecipeDatabase database,
+                                   Func<RoomType, List<Capability>> capabilitiesOf = null)
         {
             var elements = AvailableElements(database);
             var weapons = AvailableWeaponCategories(database);
@@ -45,7 +50,7 @@ namespace Help.Dungeon
             {
                 _rng = config.Seed < 0 ? new Random() : new Random(config.Seed + attempt);
                 var map = BuildLayout(config);
-                AssignEntryConditions(map, elements, weapons);
+                AssignEntryConditions(map, elements, weapons, capabilitiesOf);
                 last = map;
 
                 if (PlaceLoot(map, database, out var keyItems) && FloorValidator.Validate(map, database))
@@ -156,19 +161,44 @@ namespace Help.Dungeon
             }
         }
 
+        // D-11: 방 크기는 여기서 굴리지 않는다. 크기의 진실은 **템플릿**이고,
+        // RoomManager.ApplyRoomSize가 고른 템플릿에서 Room.SizeClass를 채운다.
+        // (예전엔 24% 확률로 크기를 먼저 굴렸는데, 그 크기의 템플릿이 없으면
+        //  매칭에 실패해 절차적 빈 상자로 떨어졌다 — 실제로 겪은 결함이다.)
+
         // 조건부 방 유형에 진입 조건을 부여한다. 제작 가능한 능력이 없으면 그 유형은 자유 방으로 남는다.
         //
         // 조건 수를 제한하는 이유: 열쇠 아이템은 클리어 가능성 때문에 층 테이블에 무조건 들어간다.
         // 조건이 많으면 열쇠만으로 예산(FloorRecipeCount)이 꽉 차 플레이어가 무엇을 만들지 고를 여지가
         // 사라지고, 보너스 글자가 0이 되어 맵 전체에 퍼지지도 않는다.
-        private void AssignEntryConditions(DungeonMap map, List<ElementType> elements, List<WeaponCategory> weapons)
+        // 관문형 방(환경 퍼즐·전투 퍼즐)에 진입 조건을 부여한다.
+        //
+        // DESIGN.md의 퍼즐 3유형 정의를 따른다:
+        //   환경 퍼즐 = "기믹을 풀어야 진행"   → 관문형(조건부)
+        //   전투 퍼즐 = "처치해야 클리어"      → 관문형(조건부)
+        //   독립 퍼즐 = "보상 연결"            → 보상형(자유 입장, 조건 없음)
+        //
+        // ★ 조건은 그 방 콘텐츠가 **실제로 요구하는 능력**에서 역산한다(capabilitiesOf).
+        //   예전엔 조건이 원소/무기 어휘였는데 방 안 장애물은 능력을 요구해서,
+        //   조건을 충족해도 클리어가 불가능했다.
+        private void AssignEntryConditions(DungeonMap map, List<ElementType> elements,
+                                           List<WeaponCategory> weapons,
+                                           Func<RoomType, List<Capability>> capabilitiesOf)
         {
             int assigned = 0;
             foreach (var room in map.Rooms.Values)
             {
                 if (assigned >= MaxConditionalRooms) return;
+                if (room.Type != RoomType.CombatPuzzle && room.Type != RoomType.EnvironmentPuzzle) continue;
 
-                if (room.Type == RoomType.CombatPuzzle && elements.Count > 0)
+                var caps = capabilitiesOf?.Invoke(room.Type);
+                if (caps != null && caps.Count > 0)
+                {
+                    // 콘텐츠가 요구하는 능력을 전부 조건으로 — 하나라도 빠지면 클리어 불가 방이 된다.
+                    foreach (var cap in caps)
+                        room.EntryConditions.Add(new EntryCondition { RequiredCapability = cap });
+                }
+                else if (room.Type == RoomType.CombatPuzzle && elements.Count > 0)
                     room.EntryConditions.Add(new EntryCondition { RequiredElement = elements[_rng.Next(elements.Count)] });
                 else if (room.Type == RoomType.EnvironmentPuzzle && weapons.Count > 0)
                     room.EntryConditions.Add(new EntryCondition { RequiredWeapon = weapons[_rng.Next(weapons.Count)] });
@@ -191,6 +221,13 @@ namespace Help.Dungeon
 
             // 도달 가능한 자유 방에만 배치 → 재료가 잠긴 방 뒤에 갇히는 교착 방지
             var targets = FloorValidator.ReachableFreeRooms(map);
+
+            // 시작 방(Tutorial)은 K·Y와 잠긴 문이 손으로 짜인 학습 공간이라 예산 글자를 얹지 않는다.
+            // (PlaceBonusLoot은 원래부터 제외하고 있었다 — 여기만 빠져 있었다.)
+            // 단, 뺐더니 놓을 곳이 없어지면 교착이므로 원래 목록으로 되돌린다.
+            var withoutTutorial = targets.Where(r => r.Type != RoomType.Tutorial).ToList();
+            if (withoutTutorial.Count > 0) targets = withoutTutorial;
+
             if (targets.Count == 0) return false;
 
             int i = 0;
