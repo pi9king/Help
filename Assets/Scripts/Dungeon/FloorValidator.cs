@@ -140,14 +140,16 @@ namespace Help.Dungeon
                     yield return cond;
         }
 
-        // 원소+무기 조합이 같은 조건은 하나로 취급 (무기 1자루로 재사용).
+        // 원소+무기+능력 조합이 같은 조건은 하나로 취급 (아이템 1개로 재사용).
+        // 능력을 빼먹으면 BreakWall 방과 Melt 방이 한 조건으로 합쳐져 열쇠가 하나만 계획된다.
         private static List<EntryCondition> Distinct(IEnumerable<EntryCondition> conditions)
         {
             var result = new List<EntryCondition>();
             foreach (var cond in conditions)
             {
                 if (!result.Any(c => c.RequiredElement == cond.RequiredElement
-                                  && c.RequiredWeapon == cond.RequiredWeapon))
+                                  && c.RequiredWeapon == cond.RequiredWeapon
+                                  && c.RequiredCapability == cond.RequiredCapability))
                     result.Add(cond);
             }
             return result;
@@ -159,12 +161,17 @@ namespace Help.Dungeon
             if (!AlphabetWordRule.IsBasicCraftable(item)) return false;
             if (cond.RequiredElement != ElementType.None && item.Element != cond.RequiredElement) return false;
             if (cond.RequiredWeapon != WeaponCategory.None && item.WeaponCategory != cond.RequiredWeapon) return false;
+            // 능력 조건: 그 능력을 실제로 제공하는 아이템만 열쇠가 될 수 있다.
+            // (EntryRequirementChecker가 입장 판정에서 쓰는 규칙과 같아야 한다)
+            if (cond.RequiredCapability != Capability.None &&
+                (item.Capabilities == null || !item.Capabilities.Contains(cond.RequiredCapability))) return false;
             return true;
         }
 
         private static int ConstraintCount(EntryCondition cond) =>
             (cond.RequiredElement != ElementType.None ? 1 : 0) +
-            (cond.RequiredWeapon != WeaponCategory.None ? 1 : 0);
+            (cond.RequiredWeapon != WeaponCategory.None ? 1 : 0) +
+            (cond.RequiredCapability != Capability.None ? 1 : 0);
 
         private static int TotalRecipeCost(ItemDefinition item) =>
             item.Recipe.Sum(r => r.Count);

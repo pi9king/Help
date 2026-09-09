@@ -25,6 +25,24 @@ namespace Tests.EditMode
                 (AlphabetMaterial.S, 1), (AlphabetMaterial.A, 1), (AlphabetMaterial.B, 1), (AlphabetMaterial.R, 1)));
             _db.AddItem(MakeWeapon("axe", ElementType.Stone, WeaponCategory.Axe,
                 (AlphabetMaterial.A, 2), (AlphabetMaterial.X, 1)));
+
+            // 능력을 제공하는 아이템 — 진입 조건을 콘텐츠 능력에서 역산하는 경로를 검증하려면
+            // 그 능력을 실제로 주는 아이템이 DB에 있어야 한다(없으면 층 생성이 조건을 포기한다).
+            _db.AddItem(WithCapability(
+                MakeWeapon("axel", ElementType.None, WeaponCategory.Axe,
+                    (AlphabetMaterial.A, 1), (AlphabetMaterial.X, 1), (AlphabetMaterial.L, 1)),
+                Capability.BreakWall));
+            _db.AddItem(WithCapability(
+                MakeWeapon("flare", ElementType.None, WeaponCategory.None,
+                    (AlphabetMaterial.F, 1), (AlphabetMaterial.L, 1),
+                    (AlphabetMaterial.A, 1), (AlphabetMaterial.R, 1)),
+                Capability.Melt));
+        }
+
+        private static ItemDefinition WithCapability(ItemDefinition def, Capability cap)
+        {
+            def.Capabilities = new List<Capability> { cap };
+            return def;
         }
 
         private ItemDefinition MakeWeapon(string id, ElementType element, WeaponCategory cat,
@@ -250,6 +268,67 @@ namespace Tests.EditMode
             var map = gen.Generate(new DungeonConfig { Seed = 3, MinRooms = 8, MaxRooms = 12 });
             foreach (var room in map.Rooms.Values)
                 Assert.IsTrue(room.IsFreeEntry, "DB 없는 Generate는 조건 없는 자유 방만 생성해야 함");
+        }
+
+        // 시작 방(Tutorial)은 K·Y 줍기와 잠긴 문이 손으로 짜인 학습 공간이다.
+        // 여기에 층 예산 글자까지 쏟으면 스크립트된 글자와 겹쳐 쌓여 첫 방이 난잡해진다.
+        // BonusLoot은 이미 Tutorial을 제외하고 있었는데 GuaranteedLoot만 빠져 있었다(2026-09 발견).
+        [Test]
+        public void TutorialRoomShouldNeverReceiveLoot()
+        {
+            for (int seed = 0; seed < 30; seed++)
+            {
+                var map = new DungeonGenerator().Generate(
+                    new DungeonConfig { MinRooms = 6, MaxRooms = 10, Seed = seed }, _db);
+
+                foreach (var room in map.Rooms.Values.Where(r => r.Type == RoomType.Tutorial))
+                {
+                    Assert.IsEmpty(room.GuaranteedLoot, $"seed {seed}: 튜토리얼 방에 확정 루팅이 배치됨");
+                    Assert.IsEmpty(room.BonusLoot, $"seed {seed}: 튜토리얼 방에 보너스 루팅이 배치됨");
+                }
+            }
+        }
+
+        // DESIGN.md의 퍼즐 3유형 정의:
+        //   환경 퍼즐 "기믹을 풀어야 진행" / 전투 퍼즐 "처치해야 클리어" → 관문형(조건부)
+        //   독립 퍼즐 "보상 연결" → 보상형(자유 입장)
+        [Test]
+        public void PurePuzzleRoomsShouldStayFreeEntry()
+        {
+            for (int seed = 0; seed < 30; seed++)
+            {
+                var map = new DungeonGenerator().Generate(
+                    new DungeonConfig { MinRooms = 8, MaxRooms = 12, Seed = seed }, _db);
+
+                foreach (var room in map.Rooms.Values.Where(r => r.Type == RoomType.PurePuzzle))
+                    Assert.IsEmpty(room.EntryConditions,
+                        $"seed {seed}: 독립 퍼즐 방은 보상형이라 자유 입장이어야 한다");
+            }
+        }
+
+        // 콘텐츠가 요구하는 능력을 진입 조건으로 역산하는 경로.
+        // 레이어1(입장)과 레이어2(클리어)가 어긋나면 도구 없이 들어가 갇힌다.
+        [Test]
+        public void GateRoomsShouldRequireTheCapabilitiesTheirContentNeeds()
+        {
+            var needed = new List<Capability> { Capability.BreakWall, Capability.Melt };
+
+            for (int seed = 0; seed < 30; seed++)
+            {
+                var map = new DungeonGenerator().Generate(
+                    new DungeonConfig { MinRooms = 8, MaxRooms = 12, Seed = seed }, _db,
+                    type => needed);
+
+                foreach (var room in map.Rooms.Values.Where(r => r.EntryConditions.Count > 0))
+                {
+                    Assert.IsTrue(room.Type == RoomType.CombatPuzzle || room.Type == RoomType.EnvironmentPuzzle,
+                        $"seed {seed}: 관문형이 아닌 {room.Type} 방에 진입 조건이 붙었다");
+
+                    var caps = room.EntryConditions.Select(c => c.RequiredCapability).ToList();
+                    CollectionAssert.AreEquivalent(needed, caps,
+                        $"seed {seed}: {room.Type} 방의 조건이 콘텐츠 요구 능력과 다르다");
+                }
+            }
         }
     }
 }

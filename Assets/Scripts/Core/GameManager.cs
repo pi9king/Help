@@ -11,6 +11,10 @@ namespace Help.Core
         public static GameManager Instance { get; private set; }
 
         [SerializeField] private RecipeDatabase _recipeDatabase;
+
+        // 방 콘텐츠가 요구하는 능력을 던전 생성기에 알려준다 — 진입 조건(레이어1)을
+        // 콘텐츠(레이어2)에서 역산해 둘이 어긋나지 않게 한다. 없으면 능력 조건 없이 생성된다.
+        [SerializeField] private Help.Dungeon.RoomContentLibrary _contentLibrary;
         [SerializeField] private bool _seedStarterMaterials = true; // 프로토타입 테스트용: 시작 시 재료 지급
 
         public const int MaxFloors = 3; // 이 층 수를 모두 클리어하면 게임 승리
@@ -55,8 +59,14 @@ namespace Help.Core
         public void StartRun(DungeonConfig config)
         {
             var gen = new DungeonGenerator();
-            // 진입 조건 + 재료 보장 불변식까지 만족하는 층 생성
-            CurrentMap = gen.Generate(config, _recipeDatabase);
+            // 진입 조건 + 재료 보장 불변식까지 만족하는 층 생성.
+            // 진입 조건은 그 방 콘텐츠가 실제로 요구하는 능력에서 역산한다.
+            System.Func<Help.Dungeon.RoomType, System.Collections.Generic.List<Help.Item.Capability>> caps =
+                _contentLibrary != null
+                    ? (type => _contentLibrary.RequiredCapabilities(type, CurrentFloor))
+                    : (System.Func<Help.Dungeon.RoomType, System.Collections.Generic.List<Help.Item.Capability>>)null;
+
+            CurrentMap = gen.Generate(config, _recipeDatabase, caps);
         }
 
         // 보스 처치 후 다음 층 포탈로 진입 시 호출. 최종 층이면 승리 통지, 아니면 새 층을 생성한다.
