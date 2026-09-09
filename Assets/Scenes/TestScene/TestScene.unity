@@ -629,6 +629,10 @@ MonoBehaviour:
   _doorOpenTile: {fileID: 11400000, guid: 1d69206bbb7db564c8ffd84c970a7beb, type: 2}
   _doorLockedTile: {fileID: 11400000, guid: b1fb460dd27594b498d3635807c434d8, type: 2}
   _contentLibrary: {fileID: 11400000, guid: 7a6fe0c0fa5944544aab2a0d0fd6be67, type: 2}
+  _templateLibrary: {fileID: 11400000, guid: 60ac1ed2ec8bbba4ab3035e58d8977ba, type: 2}
+  _platformTilemap: {fileID: 0}
+  _platformTile: {fileID: 11400000, guid: b34d6858487d7c747b29decd81905857, type: 2}
+  _hazardTile: {fileID: 11400000, guid: 1abf4913e4775e04a80a637c124e90cc, type: 2}
 --- !u!4 &515878130
 Transform:
   m_ObjectHideFlags: 0
@@ -1391,7 +1395,7 @@ Camera:
   far clip plane: 1000
   field of view: 60
   orthographic: 1
-  orthographic size: 6
+  orthographic size: 7.5
   m_Depth: 0
   m_CullingMask:
     serializedVersion: 2
@@ -1714,6 +1718,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Help::Help.Core.GameManager
   _recipeDatabase: {fileID: 11400000, guid: e2cf4c18b6dc37f4e978b166df49a2d1, type: 2}
+  _contentLibrary: {fileID: 11400000, guid: 7a6fe0c0fa5944544aab2a0d0fd6be67, type: 2}
   _seedStarterMaterials: 0
 --- !u!4 &2010004406
 Transform:
@@ -1945,6 +1950,10 @@ MonoBehaviour:
   _knockbackForce: 6
   _knockbackUp: 3
   _knockbackStun: 0.18
+  _fallMultiplier: 1.7
+  _shortHopFactor: 0.4
+  _coyoteTime: 0.1
+  _jumpBufferTime: 0.12
 --- !u!114 &2133222476
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2027,7 +2036,7 @@ Rigidbody2D:
   m_Mass: 1
   m_LinearDamping: 0
   m_AngularDamping: 0.05
-  m_GravityScale: 1
+  m_GravityScale: 2.85
   m_Material: {fileID: 0}
   m_IncludeLayers:
     serializedVersion: 2

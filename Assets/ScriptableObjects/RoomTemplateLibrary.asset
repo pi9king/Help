@@ -1,0 +1,49 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d2ac2fb1d64ed8545817c9c4388ff91d, type: 3}
+  m_Name: RoomTemplateLibrary
+  m_EditorClassIdentifier: Help::Help.Dungeon.RoomTemplateLibrary
+  _entries:
+  - floor: 1
+    type: 6
+    templates:
+    - {fileID: 4900000, guid: 164547509fb099143b3c2eec3832e5da, type: 3}
+  - floor: 1
+    type: 0
+    templates:
+    - {fileID: 4900000, guid: 94681cd7cff74354ea840410b3e3dd68, type: 3}
+    - {fileID: 4900000, guid: 2a019c08c6f9a0e45b46997a97002430, type: 3}
+    - {fileID: 4900000, guid: 7d74e9af61b43264d9a49b5200b2c35a, type: 3}
+  - floor: 1
+    type: 2
+    templates:
+    - {fileID: 4900000, guid: 7b4142eb404d27946af30040fbb64f30, type: 3}
+  - floor: 1
+    type: 1
+    templates:
+    - {fileID: 4900000, guid: 1be9c1354703e894e9b8cbf571418e58, type: 3}
+  - floor: 1
+    type: 3
+    templates:
+    - {fileID: 4900000, guid: e6d262e99defc9e4d9f20042fae3899d, type: 3}
+  - floor: 1
+    type: 7
+    templates:
+    - {fileID: 4900000, guid: 2452dc589e8360e45bea090381dbb4f6, type: 3}
+  - floor: 1
+    type: 4
+    templates:
+    - {fileID: 4900000, guid: 5398b5d0dced0624a95f63afdae66495, type: 3}
+  - floor: 1
+    type: 8
+    templates:
+    - {fileID: 4900000, guid: 8f3c3815be0ba7c4782ee7f0ab1363bd, type: 3}
