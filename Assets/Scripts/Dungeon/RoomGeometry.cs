@@ -12,6 +12,11 @@ namespace Help.Dungeon
         // 바닥 줄은 레이아웃 y==0 → 셀 y = -(height/2), 셀 중심은 +0.5, 윗면은 다시 +0.5.
         public static float ContentOriginY(int roomHeight) => -(roomHeight / 2) + 1f;
 
+        // 능력 장애물(벽/문)을 세우는 로컬 높이. 콘텐츠 원점이 바닥 윗면이므로
+        // **콜라이더 밑면이 이 값만큼 아래로 내려와야** 바닥에 선다.
+        // 1×1 콜라이더를 그냥 여기 놓으면 0.5 떠서, 위 발판과의 틈에 플레이어가 낀다(2026-09-10 사고).
+        public const float ObstacleLocalY = 1f;
+
         // 바닥에 뿌리는 루팅 글자의 가로 오프셋(방 중앙 기준, 좌우 대칭).
         //
         // 나머지 연산(i % 5)으로 자리를 정하면 개수가 그 주기를 넘는 순간 글자가

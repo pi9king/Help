@@ -62,6 +62,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Help::Help.Puzzle.RoomPuzzle
   _targets: []
   _roomManager: {fileID: 0}
+  _selfContained: 0
 --- !u!1001 &282723161807768394
 PrefabInstance:
   m_ObjectHideFlags: 0

@@ -363,7 +363,7 @@ namespace Help.Dungeon
                 // 목표 수까지 봐야 한다 — 목표 0개인 퍼즐은 영원히 해결되지 않으므로
                 // 잠그는 순간 방이 통째로 갇힌다(RoomPuzzle.Awake와 같은 규칙을 쓴다).
                 if (puzzle != null)
-                    _exitLocked = RoomGating.ShouldLockExit(puzzle.ObjectiveCount, puzzle.IsSolved);
+                    _exitLocked = RoomGating.ShouldLockExit(puzzle.ExitObjectiveCount, puzzle.IsExitOpen);
             }
             if (_currentRoom != null) RenderDoors(_currentRoom);
         }

@@ -29,6 +29,10 @@ namespace Help.Editor
                 return;
             }
 
+            // 장애물을 지형 규약(Ground 레이어 + 바닥에 붙은 콜라이더)에 맞춘다.
+            // 콘텐츠 프리팹에 담기 **전에** 해야 네스티드 인스턴스가 고쳐진 원본을 가져간다.
+            PrefabSetup.NormalizeObstacles();
+
             // 전투 방: 3종(그런트/아처/브루트)을 배치. 유형 프리팹이 없으면 기본 Enemy로 대체.
             //
             // 그런트 자리는 LayerLab 아트 샘플(Enemy_Ant)이 있으면 그걸 먼저 쓴다 —
@@ -47,8 +51,8 @@ namespace Help.Editor
                 (brute, new Vector3(-3f, 1f, 0f)),
             }, withClearGate: true);
             var puzzle = BuildContent("Room_Puzzle", new (GameObject, Vector3)[] {
-                (breakable, new Vector3(2f, 1f, 0f)),
-                (ice, new Vector3(-2f, 1f, 0f)),
+                (breakable, new Vector3(2f, RoomGeometry.ObstacleLocalY, 0f)),
+                (ice, new Vector3(-2f, RoomGeometry.ObstacleLocalY, 0f)),
             });
 
             // 보스 방: 보스 1기 + 적 전멸 게이트(보스 처치=방 클리어). 보스 프리팹 없으면 브루트로 대체.
@@ -178,7 +182,7 @@ namespace Help.Editor
             CreatePickup(root.transform, Help.Item.AlphabetMaterial.Y, new Vector3(0f, 0.5f, 0f));
 
             // 잠긴 문(Unlock 요구) + RoomPuzzle(문 해제 전까지 방 출구 잠금)
-            var door = CreateLockedDoor(root.transform, new Vector3(4f, 1f, 0f));
+            var door = CreateLockedDoor(root.transform, new Vector3(4f, RoomGeometry.ObstacleLocalY, 0f));
             CreateRoomPuzzle(root.transform, door);
 
             string path = $"{Dir}/{name}.prefab";
@@ -252,9 +256,13 @@ namespace Help.Editor
             go.transform.SetParent(parent, false);
             go.transform.localPosition = localPos;
 
+            // 밟고 설 수 있는 물건은 접지 판정에 걸려야 한다 — 아니면 그 위에서 점프가 죽는다.
+            int ground = LayerMask.NameToLayer("Ground");
+            if (ground >= 0) go.layer = ground;
+
             var col = go.AddComponent<BoxCollider2D>();
             col.isTrigger = false; // 솔리드 — 플레이어를 막아 세운다
-            col.size = new Vector2(1f, 2f);
+            col.size = new Vector2(1f, RoomGeometry.ObstacleLocalY * 2f); // 밑면이 바닥에 닿는 높이
 
             var target = go.AddComponent<Help.Puzzle.CapabilityTarget>();
             var so = new SerializedObject(target);
