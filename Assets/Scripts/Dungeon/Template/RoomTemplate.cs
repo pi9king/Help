@@ -12,7 +12,7 @@ namespace Help.Dungeon
         public RoomMarker(char symbol, Vector2Int cell) { Symbol = symbol; Cell = cell; }
     }
 
-    // ASCII 텍스트에서 파싱된 방 한 장. 좌표계는 RoomLayout과 같다 — y=0이 바닥.
+    // ASCII 텍스트에서 파싱된 방 한 장. 좌표계는 RoomLayout과 같은 평면 좌표다.
     // 불변 객체이며, 확률 칸은 아직 확정되지 않은 채로 남는다(RoomLayout.Resolve가 시드로 확정).
     public sealed class RoomTemplate
     {
@@ -26,15 +26,15 @@ namespace Help.Dungeon
         public IReadOnlyList<RoomMarker> Markers { get; }
         public IReadOnlyDictionary<Direction, Vector2Int> Doors { get; }
 
-        // 시드에 따라 발판이 되거나 빈칸이 되는 칸들. 템플릿 하나가 여러 방이 되게 하는 장치.
-        public IReadOnlyList<Vector2Int> ChancePlatforms { get; }
+        // 시드에 따라 벽 또는 바닥이 되는 칸들. 템플릿 하나가 여러 방이 되게 하는 장치.
+        public IReadOnlyList<Vector2Int> ChanceWalls { get; }
         // 시드에 따라 적이 스폰되거나 비는 칸들.
         public IReadOnlyList<Vector2Int> ChanceEnemies { get; }
 
         internal RoomTemplate(string name, int width, int height, RoomSizeClass sizeClass,
                               TileKind[,] tiles, IReadOnlyList<RoomMarker> markers,
                               IReadOnlyDictionary<Direction, Vector2Int> doors,
-                              IReadOnlyList<Vector2Int> chancePlatforms,
+                              IReadOnlyList<Vector2Int> chanceWalls,
                               IReadOnlyList<Vector2Int> chanceEnemies)
         {
             Name = name;
@@ -44,7 +44,7 @@ namespace Help.Dungeon
             _tiles = tiles;
             Markers = markers;
             Doors = doors;
-            ChancePlatforms = chancePlatforms;
+            ChanceWalls = chanceWalls;
             ChanceEnemies = chanceEnemies;
         }
 

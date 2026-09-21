@@ -24,18 +24,21 @@ namespace Help.Combat
         }
 
         // reach=전방 거리, from/to=스윙 각도, color/scale=외형, duration=스윙+페이드 총 시간
-        public void Play(float reach, float fromDeg, float toDeg, Color color, float scale, float duration)
+        public void Play(Vector2 aimDirection, float reach, float fromDeg, float toDeg,
+                         Color color, float scale, float duration)
         {
             if (_sr == null) _sr = GetComponent<SpriteRenderer>();
-            transform.localPosition = new Vector3(reach, 0f, 0f);
+            Vector2 direction = AimGeometry.DirectionOrDefault(aimDirection);
+            float baseAngle = AimGeometry.AngleDegrees(direction);
+            transform.localPosition = direction * reach;
             transform.localScale = Vector3.one * scale;
             _sr.color = color;
-            _fromDeg = fromDeg;
-            _toDeg = toDeg;
+            _fromDeg = baseAngle + fromDeg;
+            _toDeg = baseAngle + toDeg;
             _duration = Mathf.Max(0.01f, duration);
             _timer = 0f;
             _sr.enabled = true;
-            transform.localRotation = Quaternion.Euler(0f, 0f, fromDeg);
+            transform.localRotation = Quaternion.Euler(0f, 0f, _fromDeg);
         }
 
         private void Update()

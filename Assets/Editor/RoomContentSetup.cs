@@ -134,7 +134,7 @@ namespace Help.Editor
             return go;
         }
 
-        // 콘텐츠 프리팹 = **방 바닥 가운데**를 원점으로 한 자식 배치(RoomGeometry.ContentOriginY).
+        // 콘텐츠 프리팹 = 쿼터뷰 방 중앙을 원점으로 한 XY 평면 자식 배치.
         // 방 중심 기준으로 잡으면 방 크기 등급이 바뀔 때 전부 공중에 뜬다.
         // 바닥에 서는 물건은 y = 콜라이더 높이/2. 빌딩블록을 네스티드 프리팹 인스턴스로 담는다.
         // withClearGate=true면 루트에 적 전멸 게이트(EnemyClearObjective+RoomPuzzle)를 붙여 전투 방 출구를 잠근다.

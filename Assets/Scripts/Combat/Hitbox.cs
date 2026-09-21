@@ -18,11 +18,12 @@ namespace Help.Combat
             SetActive(false);
         }
 
-        // 모션의 사거리(전방 offset)와 범위(크기)로 히트박스를 배치. 좌우 방향은 부모 flip이 처리.
-        public void Configure(float reachX, Vector2 size)
+        // 모션의 사거리와 범위로 히트박스를 조준 방향 앞에 배치한다.
+        public void Configure(Vector2 aimDirection, float reach, Vector2 size)
         {
-            var p = transform.localPosition;
-            transform.localPosition = new Vector3(reachX, p.y, p.z);
+            Vector2 direction = AimGeometry.DirectionOrDefault(aimDirection);
+            transform.localPosition = direction * reach;
+            transform.localRotation = Quaternion.Euler(0f, 0f, AimGeometry.AngleDegrees(direction));
             if (GetComponent<Collider2D>() is BoxCollider2D box) box.size = size;
         }
 

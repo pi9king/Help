@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Rendering;
 using Help.Dungeon;
 
 namespace Help.Core
@@ -12,7 +13,7 @@ namespace Help.Core
     {
         [SerializeField] private Transform _target;
         [SerializeField] private float _smoothSpeed = 5f;
-        [SerializeField] private Vector3 _offset = new Vector3(0, 2, -10);
+        [SerializeField] private Vector3 _offset = new Vector3(0, 0, -10);
 
         private Camera _cam;
         private Rect _roomBounds;
@@ -22,6 +23,8 @@ namespace Help.Core
         private void Awake()
         {
             _cam = GetComponent<Camera>();
+            _cam.transparencySortMode = TransparencySortMode.CustomAxis;
+            _cam.transparencySortAxis = Vector3.up;
             // 직교 크기는 코드가 소유한다 — 방 크기 규격(RoomDimensions)과 어긋나면
             // Small 방이 한 화면에 안 들어오거나 방 밖이 보인다.
             if (_cam != null && _cam.orthographic) _cam.orthographicSize = RoomDimensions.CameraOrthoSize;

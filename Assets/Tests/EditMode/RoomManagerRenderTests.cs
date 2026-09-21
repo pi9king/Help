@@ -25,7 +25,7 @@ namespace Tests.EditMode
         }
 
         [Test]
-        public void LoadMap_PaintsShell_FloorAtBottomWallsAround_EmptyInterior()
+        public void LoadMap_PaintsWallsAndSeparateWalkableFloor()
         {
             var tmGo = new GameObject("tm", typeof(Grid), typeof(Tilemap));
             var tilemap = tmGo.GetComponent<Tilemap>();
@@ -44,14 +44,14 @@ namespace Tests.EditMode
             {
                 rm.LoadMap(map);
 
-                // 셸(테두리)만 칠해짐: 2*W + 2*(H-2)
-                Assert.AreEqual(2 * W + 2 * (H - 2), Occupied(tilemap), "셸(테두리)만 칠해져야 함");
-                // 내부는 빈 공간(플레이어가 지나다니는 공기)
-                Assert.IsNull(tilemap.GetTile(new Vector3Int(0, 0, 0)), "내부 중앙은 빈 공간이어야 함");
-                // 바닥 중앙 = 바닥 타일 (원점 중심 좌표에서 바닥행 = -H/2)
-                Assert.AreEqual(floorTile, tilemap.GetTile(new Vector3Int(0, -H / 2, 0)), "바닥 중앙이 바닥 타일이 아님");
-                // 천장 모서리 = 벽
+                Assert.AreEqual(2 * W + 2 * (H - 2), Occupied(tilemap));
+                Assert.IsNull(tilemap.GetTile(new Vector3Int(0, 0, 0)), "장애물 맵의 내부는 비어야 함");
                 Assert.AreEqual(wallTile, tilemap.GetTile(new Vector3Int(-W / 2, (H - 1) - H / 2, 0)), "천장 모서리가 벽이 아님");
+
+                var floorMap = GetPrivate<Tilemap>(rm, "_floorTilemap");
+                Assert.IsNotNull(floorMap);
+                Assert.AreEqual((W - 2) * (H - 2), Occupied(floorMap));
+                Assert.AreEqual(floorTile, floorMap.GetTile(Vector3Int.zero));
             }
             finally
             {
@@ -112,8 +112,7 @@ namespace Tests.EditMode
             try
             {
                 rm.LoadMap(map);
-                // 동쪽 문 위치 = (W-1 - W/2, SideDoorRow - H/2) — 바닥 바로 위
-                Assert.AreEqual(doorTile, tilemap.GetTile(new Vector3Int((W - 1) - W / 2, 1 - H / 2, 0)),
+                Assert.AreEqual(doorTile, tilemap.GetTile(new Vector3Int((W - 1) - W / 2, 0, 0)),
                     "연결된 동쪽 문에 열린 문 타일이 표시되지 않음");
             }
             finally
@@ -186,6 +185,11 @@ namespace Tests.EditMode
                 int gl = LayerMask.NameToLayer("Ground");
                 if (gl >= 0)
                     Assert.AreEqual(gl, tmGo.layer, "Tilemap이 Ground 레이어로 이동되지 않음");
+
+                var floorMap = GetPrivate<Tilemap>(rm, "_floorTilemap");
+                var floorCollider = floorMap.GetComponent<TilemapCollider2D>();
+                Assert.IsTrue(floorCollider == null || !floorCollider.enabled,
+                    "이동 가능한 바닥에 충돌 콜라이더가 활성화됨");
             }
             finally
             {
@@ -198,6 +202,12 @@ namespace Tests.EditMode
         {
             var f = target.GetType().GetField(field, BindingFlags.NonPublic | BindingFlags.Instance);
             f.SetValue(target, value);
+        }
+
+        private static T GetPrivate<T>(object target, string field) where T : class
+        {
+            var f = target.GetType().GetField(field, BindingFlags.NonPublic | BindingFlags.Instance);
+            return f.GetValue(target) as T;
         }
     }
 }

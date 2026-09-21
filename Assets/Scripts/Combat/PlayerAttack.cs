@@ -15,6 +15,7 @@ namespace Help.Combat
 
         private AttackMotionClock _clock;
         private AttackMotionDef _current;
+        private Vector2 _attackDirection = Vector2.down;
 
         private void Awake()
         {
@@ -43,13 +44,14 @@ namespace Help.Combat
         private void OnAttackPerformed()
         {
             _current = SelectMotion();
+            _attackDirection = AimGeometry.DirectionOrDefault(_pc.AimDirection);
             _clock = new AttackMotionClock(_current.Windup, _current.Active, _current.Recovery);
             _clock.Start();
 
             switch (_current.Kind)
             {
                 case AttackKind.MeleeArc:
-                    _slash?.Play(_current.Reach, _current.ArcStartDeg, _current.ArcEndDeg,
+                    _slash?.Play(_attackDirection, _current.Reach, _current.ArcStartDeg, _current.ArcEndDeg,
                                  _current.SlashColor, _current.SlashScale,
                                  _current.Active + _current.Recovery);
                     break;
@@ -74,7 +76,7 @@ namespace Help.Combat
             {
                 if (r.IsActive)
                 {
-                    _hitbox.Configure(_current.Reach, _current.HitboxSize);
+                    _hitbox.Configure(_attackDirection, _current.Reach, _current.HitboxSize);
                     _hitbox.SetActive(true);
                 }
                 else

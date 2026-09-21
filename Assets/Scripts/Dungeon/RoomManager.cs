@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Serialization;
 using UnityEngine.Tilemaps;
 using Help.Core;
 using Help.Player;
@@ -17,15 +18,14 @@ namespace Help.Dungeon
         [SerializeField] private TileBase _doorLockedTile;
         [SerializeField] private RoomContentLibrary _contentLibrary; // 방 유형→콘텐츠 프리팹(적/퍼즐/루팅 데이터 스폰)
         [SerializeField] private RoomTemplateLibrary _templateLibrary; // 방 유형→ASCII 지형 템플릿(Assets/Rooms/*.txt)
-        [SerializeField] private Tilemap _platformTilemap;            // 일방통행 발판 전용(아래에서 통과)
-        [SerializeField] private TileBase _platformTile;
+        [FormerlySerializedAs("_platformTilemap")]
+        [SerializeField] private Tilemap _floorTilemap;
         [SerializeField] private TileBase _hazardTile;   // D-12: 가시/구덩이를 합친 피해 바닥
 
         // 방 크기는 방마다 달라질 수 있으므로 상수가 아니라 현재 방의 값이다.
         // (EnterRoom이 방에 맞춰 갱신한다)
         private int _roomWidth = 13;
         private int _roomHeight = 9;
-        private const int SideDoorRow = 1; // 좌우 문 높이: 바닥(y=0) 바로 위
 
         private DungeonMap _map;
         private Room _currentRoom;
@@ -73,7 +73,7 @@ namespace Help.Dungeon
                 gm.StartRun(new DungeonConfig());
             LoadMap(gm.CurrentMap);
 
-            // 레거시 Ground 발판을 제거했으므로 방 바닥 위에 플레이어를 놓는다
+            // 쿼터뷰 바닥의 안전한 셀에 플레이어를 놓는다.
             PlacePlayerOnFloor();
         }
 
@@ -328,25 +328,20 @@ namespace Help.Dungeon
         // 루팅 글자 간격. 픽업 콜라이더(0.9)보다 넓어야 서로 물리지 않는다.
         private const float LootSpacing = 1.8f;
 
-        // 바닥 위(+xOffset)의 월드 좌표. GuaranteedLoot 픽업 배치용.
-        //
-        // 예전엔 바닥 칸의 **중심**을 그대로 썼다. 셀 중심은 디딤면보다 0.5 아래라
-        // 0.9 크기 픽업이 통째로 지면에 묻혀 플레이어 캡슐과 겹치지 않았다 —
-        // 글자가 땅에 박혀서 주울 수 없었다(팝 애니메이션으로 잠깐 솟을 때만 우연히 먹혔다).
-        // 플레이어를 놓는 높이(PlacePlayerOnFloor)와 같은 기준으로 맞춘다.
+        // 방 중앙의 이동 가능한 바닥에 글자를 가로로 펼친다.
         private Vector3 FloorSpawnPos(float xOffset)
         {
             if (_tilemap == null)
-                return new Vector3(xOffset, RoomGeometry.ContentOriginY(_roomHeight), 0f);
+                return new Vector3(xOffset, 0f, 0f);
 
-            Vector3 w = _tilemap.GetCellCenterWorld(SafeSpawnCell()) + Vector3.up * 1.0f;
+            Vector3 w = _tilemap.GetCellCenterWorld(SafeSpawnCell());
             w.x += xOffset;
 
             // 스폰 기준점이 방 가장자리에 가까우면 넓게 편 글자가 벽 안으로 밀려난다.
             // 벽에 박힌 글자도 결국 못 줍는 글자다 — 방 안쪽 바닥 범위로 가둔다.
             w.x = Mathf.Clamp(w.x,
-                _tilemap.GetCellCenterWorld(ToCell(1, 0)).x,
-                _tilemap.GetCellCenterWorld(ToCell(_roomWidth - 2, 0)).x);
+                _tilemap.GetCellCenterWorld(ToCell(1, _roomHeight / 2)).x,
+                _tilemap.GetCellCenterWorld(ToCell(_roomWidth - 2, _roomHeight / 2)).x);
 
             w.z = 0f;
             return w;
@@ -395,12 +390,13 @@ namespace Help.Dungeon
             _camera?.SetRoomBounds(Help.Core.CameraBounds.RoomRect(_roomWidth, _roomHeight));
         }
 
-        // 현재 방을 Tilemap에 그린다: 테두리 벽 + 내부 바닥 + 연결된 변에 문(바닥).
+        // 현재 방을 Tilemap에 그린다: 장애물 Tilemap에는 벽, 바닥 Tilemap에는 이동 공간.
         private void RenderRoom(Room room)
         {
             if (_tilemap == null) return;
+            EnsureFloorTilemap();
             _tilemap.ClearAllTiles();
-            if (_platformTilemap != null) _platformTilemap.ClearAllTiles();
+            if (_floorTilemap != null) _floorTilemap.ClearAllTiles();
             ClearHazards();
 
             if (_resolved != null) PaintResolved();
@@ -409,19 +405,20 @@ namespace Help.Dungeon
             RenderDoors(room);
         }
 
-        // 템플릿이 없는 방(폴백): 예전 절차적 셸 — 바닥 한 줄 + 테두리 벽.
+        // 템플릿이 없는 방(폴백): 테두리 벽 + 내부 바닥.
         private void PaintProceduralShell()
         {
             foreach (var kv in RoomLayout.Build(_roomWidth, _roomHeight))
             {
-                var tile = kv.Value == TileKind.Wall ? _wallTile : _floorTile;
-                if (tile == null) continue;
-                _tilemap.SetTile(ToCell(kv.Key.x, kv.Key.y), tile);
+                var cell = ToCell(kv.Key.x, kv.Key.y);
+                if (kv.Value == TileKind.Wall)
+                    _tilemap.SetTile(cell, _wallTile);
+                else if (_floorTilemap != null)
+                    _floorTilemap.SetTile(cell, _floorTile);
             }
         }
 
-        // ASCII 템플릿에서 확정된 지형을 그린다.
-        // 일방통행 발판은 별도 Tilemap으로 보내야 PlatformEffector2D를 걸 수 있다.
+        // ASCII 템플릿에서 확정된 쿼터뷰 지형을 그린다.
         private void PaintResolved()
         {
             for (int x = 0; x < _resolved.Width; x++)
@@ -430,13 +427,12 @@ namespace Help.Dungeon
                     var cell = ToCell(x, y);
                     switch (_resolved.Tiles[x, y])
                     {
-                        case TileKind.Floor: _tilemap.SetTile(cell, _floorTile); break;
-                        case TileKind.Wall: _tilemap.SetTile(cell, _wallTile); break;
-                        case TileKind.Platform:
-                            if (_platformTilemap != null) _platformTilemap.SetTile(cell, _platformTile ?? _floorTile);
+                        case TileKind.Floor:
+                            if (_floorTilemap != null) _floorTilemap.SetTile(cell, _floorTile);
                             break;
+                        case TileKind.Wall: _tilemap.SetTile(cell, _wallTile); break;
                         case TileKind.Hazard:
-                            if (_hazardTile != null) _tilemap.SetTile(cell, _hazardTile);
+                            if (_floorTilemap != null) _floorTilemap.SetTile(cell, _hazardTile ?? _floorTile);
                             AddHazard(cell, name: $"Hazard_{x}_{y}");
                             break;
                     }
@@ -452,13 +448,11 @@ namespace Help.Dungeon
         private Vector3Int ToCell(int x, int y) =>
             new Vector3Int(x - _roomWidth / 2, y - _roomHeight / 2, 0);
 
-        // 콘텐츠 프리팹의 원점 = 방 바닥 가운데(디딤면).
-        // 프리팹은 이 기준으로 저작한다 — 방 중심을 기준으로 하드코딩하면
-        // 크기 등급이 바뀌는 순간 전부 공중에 뜬다(RoomGeometry 주석 참조).
+        // 쿼터뷰 콘텐츠 프리팹의 원점 = 방 중앙 바닥 셀.
         private Vector3 ContentOrigin() =>
             _tilemap != null
-                ? _tilemap.GetCellCenterWorld(ToCell(_roomWidth / 2, 0)) + Vector3.up * 0.5f
-                : new Vector3(0f, RoomGeometry.ContentOriginY(_roomHeight), 0f);
+                ? _tilemap.GetCellCenterWorld(ToCell(_roomWidth / 2, _roomHeight / 2))
+                : Vector3.zero;
 
         private void ClearHazards()
         {
@@ -543,19 +537,18 @@ namespace Help.Dungeon
             {
                 case Direction.North: return new Vector3Int(cx - _roomWidth / 2, (_roomHeight - 1) - _roomHeight / 2, 0);
                 case Direction.South: return new Vector3Int(cx - _roomWidth / 2, 0 - _roomHeight / 2, 0);
-                // 좌우 문은 바닥 바로 위 높이 — 플레이어가 딛고 서서 E를 누르고, 진입 후 바닥에 착지하도록
-                case Direction.East: return new Vector3Int((_roomWidth - 1) - _roomWidth / 2, SideDoorRow - _roomHeight / 2, 0);
-                default: return new Vector3Int(0 - _roomWidth / 2, SideDoorRow - _roomHeight / 2, 0); // West
+                case Direction.East: return new Vector3Int((_roomWidth - 1) - _roomWidth / 2, 0, 0);
+                default: return new Vector3Int(0 - _roomWidth / 2, 0, 0); // West
             }
         }
 
-        // 방 셸(바닥/벽)에 물리 콜라이더를 붙인다: solid 타일(ColliderType=Grid)만 충돌하며,
+        // 장애물 Tilemap에만 물리 콜라이더를 붙인다. 바닥 Tilemap은 시각 전용이다.
         // CompositeCollider2D로 인접 셀을 병합해 이음새(플레이어가 걸리는 틈)를 없앤다.
-        // Tilemap을 Ground 레이어로 옮겨 PlayerController의 접지 판정(_groundLayer)이 방 바닥을 인식하게 한다.
+        // 기존 물리 레이어 이름은 에셋 호환을 위해 Ground로 유지한다.
         private void EnsureColliders()
         {
             if (_tilemap == null) return;
-            EnsurePlatformTilemap();
+            EnsureFloorTilemap();
             var go = _tilemap.gameObject;
 
             int groundLayer = LayerMask.NameToLayer("Ground");
@@ -574,55 +567,44 @@ namespace Help.Dungeon
             if (tilemapCollider == null) tilemapCollider = go.AddComponent<TilemapCollider2D>();
             tilemapCollider.compositeOperation = Collider2D.CompositeOperation.Merge;
 
-            // D-1: 벽/바닥에 마찰이 없어야 한다. 벽에 걸려 미끄러지는 끊김을 없애고,
-            // 도달성 시뮬(마찰을 모델링하지 않는다)과 실제 게임의 물리를 일치시킨다.
+            // 벽 마찰로 이동이 끊기지 않게 한다.
             Help.Core.PhysicsMaterials.ApplyFrictionless(go);
-            if (_platformTilemap != null)
-                Help.Core.PhysicsMaterials.ApplyFrictionless(_platformTilemap.gameObject);
         }
 
-        // 일방통행 발판은 본 지형과 콜라이더를 공유할 수 없다 —
-        // TilemapCollider2D는 하나의 콜라이더라 일부 칸에만 PlatformEffector2D를 걸 방법이 없다.
-        // 그래서 발판만 담는 두 번째 Tilemap을 만들고 거기에 이펙터를 붙인다.
-        // 씬 배선이 없어도 런타임에 알아서 생긴다(프로젝트의 다른 런타임 생성 요소와 같은 방식).
-        private void EnsurePlatformTilemap()
+        // 바닥은 시각 전용이다. 이전 씬에 남은 콜라이더와 이펙터는 즉시 비활성화한다.
+        private void EnsureFloorTilemap()
         {
-            if (_platformTilemap == null)
+            if (_floorTilemap == null)
             {
                 var parent = _tilemap.transform.parent != null ? _tilemap.transform.parent : _tilemap.transform;
-                var go = new GameObject("PlatformTilemap", typeof(Tilemap), typeof(TilemapRenderer));
+                var go = new GameObject("FloorTilemap", typeof(Tilemap), typeof(TilemapRenderer));
                 go.transform.SetParent(parent, false);
-                _platformTilemap = go.GetComponent<Tilemap>();
+                _floorTilemap = go.GetComponent<Tilemap>();
 
                 var renderer = go.GetComponent<TilemapRenderer>();
                 var source = _tilemap.GetComponent<TilemapRenderer>();
                 if (source != null)
                 {
                     renderer.sortingLayerID = source.sortingLayerID;
-                    renderer.sortingOrder = source.sortingOrder;
+                    renderer.sortingOrder = source.sortingOrder - 1;
                 }
             }
 
-            var pgo = _platformTilemap.gameObject;
-            int groundLayer = LayerMask.NameToLayer("Ground");
-            if (groundLayer >= 0) pgo.layer = groundLayer;
-
+            var pgo = _floorTilemap.gameObject;
             var col = pgo.GetComponent<TilemapCollider2D>();
-            if (col == null) col = pgo.AddComponent<TilemapCollider2D>();
-            col.usedByEffector = true;
-
+            if (col != null) col.enabled = false;
             var effector = pgo.GetComponent<PlatformEffector2D>();
-            if (effector == null) effector = pgo.AddComponent<PlatformEffector2D>();
-            effector.useOneWay = true;
-            effector.surfaceArc = 160f;   // 위에서만 막고 아래/옆은 통과
+            if (effector != null) effector.enabled = false;
+            var rb = pgo.GetComponent<Rigidbody2D>();
+            if (rb != null) rb.simulated = false;
         }
 
-        // 방 로드 후 플레이어를 방 바닥 중앙 위에 놓는다(레거시 Ground 제거 후 방이 유일한 지면).
+        // 방 로드 후 플레이어를 이동 가능한 바닥 셀 중앙에 놓는다.
         private void PlacePlayerOnFloor()
         {
             if (_player == null || _tilemap == null) return;
 
-            Vector3 world = _tilemap.GetCellCenterWorld(SafeSpawnCell()) + Vector3.up * 1.0f;
+            Vector3 world = _tilemap.GetCellCenterWorld(SafeSpawnCell());
             world.z = _player.transform.position.z;
             _player.transform.position = world;
         }
@@ -632,23 +614,24 @@ namespace Help.Dungeon
         // (예전처럼 무조건 방 중앙에 놓으면 거기가 구덩이인 방에서 즉사한다)
         private Vector3Int SafeSpawnCell()
         {
-            if (_resolved == null) return new Vector3Int(0, 0 - _roomHeight / 2, 0);
+            if (_resolved == null) return ToCell(_roomWidth / 2, _roomHeight / 2);
 
             foreach (var marker in _resolved.Markers)
                 if (marker.Symbol == 'p') return ToCell(marker.Cell.x, marker.Cell.y);
 
-            int center = _resolved.Width / 2;
-            for (int step = 0; step < _resolved.Width; step++)
-                foreach (int x in new[] { center - step, center + step })
+            int centerX = _resolved.Width / 2;
+            int centerY = _resolved.Height / 2;
+            int maxRadius = Mathf.Max(_resolved.Width, _resolved.Height);
+            for (int radius = 0; radius < maxRadius; radius++)
+                for (int y = Mathf.Max(1, centerY - radius); y <= Mathf.Min(_resolved.Height - 2, centerY + radius); y++)
+                for (int x = Mathf.Max(1, centerX - radius); x <= Mathf.Min(_resolved.Width - 2, centerX + radius); x++)
                 {
-                    if (x < 1 || x >= _resolved.Width - 1) continue;
-                    var below = _resolved.TileAt(x, 0);
-                    if (!ResolvedRoom.IsStandable(below) || ResolvedRoom.IsHazard(below)) continue;
-                    if (ResolvedRoom.BlocksMovement(_resolved.TileAt(x, 1))) continue;
-                    return ToCell(x, 1);
+                    TileKind tile = _resolved.TileAt(x, y);
+                    if (!ResolvedRoom.IsWalkable(tile) || ResolvedRoom.IsHazard(tile)) continue;
+                    return ToCell(x, y);
                 }
 
-            return new Vector3Int(0, 0 - _roomHeight / 2, 0);
+            return ToCell(_roomWidth / 2, _roomHeight / 2);
         }
 
         // RoomPuzzle이 방 목표 미해결 시 출구를 잠근다. 해결되면 TryClearCurrentRoom이 해제.
@@ -682,8 +665,8 @@ namespace Help.Dungeon
         public void SpawnNextFloorPortal()
         {
             Vector3 pos = _tilemap != null
-                ? _tilemap.GetCellCenterWorld(SafeSpawnCell()) + Vector3.up * 1f
-                : Vector3.up * 2f;
+                ? _tilemap.GetCellCenterWorld(SafeSpawnCell())
+                : Vector3.zero;
             NextFloorPortal.Spawn(pos, _activeContent != null ? _activeContent.transform : null);
         }
 

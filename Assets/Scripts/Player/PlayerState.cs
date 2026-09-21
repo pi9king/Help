@@ -4,8 +4,6 @@ namespace Help.Player
     {
         Idle,
         Running,
-        Jumping,
-        Falling,
         Dashing,
         Attacking,
         Hurt,

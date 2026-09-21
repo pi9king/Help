@@ -9,7 +9,6 @@ namespace Help.Player
         public int AttackPower { get; private set; }
         public int Defense { get; private set; }
         public float MoveSpeed { get; private set; }
-        public float JumpForce { get; private set; }
         public float DashForce { get; private set; }
 
         public event Action<int, int> OnHpChanged;  // (current, max)
@@ -23,7 +22,7 @@ namespace Help.Player
 
         // attack 기본값 = 맨손 공격력. 무기 없이도 기본 적(HP 30)을 2타에 잡을 수 있는 하한.
         public PlayerStats(int maxHp = 100, int attack = 15, int defense = 0,
-                           float moveSpeed = 7f, float jumpForce = 14f, float dashForce = 20f)
+                           float moveSpeed = 7f, float dashForce = 20f)
         {
             MaxHp = maxHp;
             CurrentHp = maxHp;
@@ -32,7 +31,6 @@ namespace Help.Player
             _baseAttack = attack;
             _baseDefense = defense;
             MoveSpeed = moveSpeed;
-            JumpForce = jumpForce;
             DashForce = dashForce;
         }
 

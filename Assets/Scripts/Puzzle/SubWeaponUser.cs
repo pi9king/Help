@@ -25,8 +25,9 @@ namespace Help.Puzzle
             var caps = _owner.EquippedSubCapabilities;
             if (caps == null || caps.Count == 0) return; // 장착 서브무기 없으면 무효
 
-            Vector2 center = (Vector2)_owner.transform.position + new Vector2(_owner.FacingDir * _reach, 0f);
-            var hits = Physics2D.OverlapBoxAll(center, _size, 0f);
+            Vector2 aim = AimGeometry.DirectionOrDefault(_owner.AimDirection);
+            Vector2 center = AimGeometry.ForwardCenter(_owner.transform.position, aim, _reach);
+            var hits = Physics2D.OverlapBoxAll(center, _size, AimGeometry.AngleDegrees(aim));
             var effect = SubWeaponEffectResolver.Resolve(caps);
 
             foreach (var h in hits)

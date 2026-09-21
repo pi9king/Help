@@ -21,12 +21,12 @@ namespace Tests.EditMode
                 for (int x = 0; x < w; x++)
                 {
                     bool border = x == 0 || x == w - 1 || y == 0 || y == h - 1;
-                    char c = !border ? '.' : (y == 0 ? '=' : '#');
+                    char c = !border ? '.' : '#';
 
                     if (y == 0 && x == w / 2) c = 'D';                       // South
                     else if (y == h - 1 && x == w / 2) c = 'D';              // North
-                    else if (x == 0 && y == 1) c = 'D';                      // West
-                    else if (x == w - 1 && y == 1) c = 'D';                  // East
+                    else if (x == 0 && y == h / 2) c = 'D';                  // West
+                    else if (x == w - 1 && y == h / 2) c = 'D';              // East
                     sb.Append(c);
                 }
                 rows[row] = sb.ToString();
@@ -65,10 +65,10 @@ namespace Tests.EditMode
         [Test]
         public void FirstTextRowShouldBeTopOfRoom()
         {
-            // y=0이 바닥이다(RoomLayout 규약). 텍스트는 위에서 아래로 읽으므로 뒤집혀야 한다.
+            // 텍스트 첫 줄이 북쪽이므로 배열에서는 가장 높은 y가 된다.
             var t = RoomTemplateParser.Parse(Shell(RoomSizeClass.Small), "s").Template;
-            Assert.AreEqual(TileKind.Floor, t.TileAt(1, 0), "바닥 행(y=0)은 Floor");
-            Assert.AreEqual(TileKind.Wall, t.TileAt(1, t.Height - 1), "천장 행은 Wall");
+            Assert.AreEqual(TileKind.Wall, t.TileAt(1, 0));
+            Assert.AreEqual(TileKind.Wall, t.TileAt(1, t.Height - 1));
         }
 
         [Test]
@@ -133,13 +133,13 @@ namespace Tests.EditMode
         [Test]
         public void ShouldCollectMarkersWithoutMakingThemSolid()
         {
-            var rows = Replace(Shell(RoomSizeClass.Small), 13, 4, 'e'); // 바닥 바로 위 행
+            var rows = Replace(Shell(RoomSizeClass.Small), 13, 4, 'e');
             var t = RoomTemplateParser.Parse(rows, "marker").Template;
 
             Assert.AreEqual(1, t.Markers.Count);
             Assert.AreEqual('e', t.Markers[0].Symbol);
             Assert.AreEqual(new Vector2Int(4, 1), t.Markers[0].Cell);
-            Assert.AreEqual(TileKind.Empty, t.TileAt(4, 1), "마커 칸은 지형이 아니라 빈 공간이다");
+            Assert.AreEqual(TileKind.Floor, t.TileAt(4, 1), "마커 아래는 이동 가능한 바닥이다");
         }
 
         [Test]
@@ -147,19 +147,19 @@ namespace Tests.EditMode
         {
             var rows = Replace(Shell(RoomSizeClass.Small), 8, 6, '?');
             var t = RoomTemplateParser.Parse(rows, "chance").Template;
-            Assert.AreEqual(1, t.ChancePlatforms.Count);
-            Assert.AreEqual(TileKind.Empty, t.TileAt(6, 6), "확률 칸은 해석 전까지 빈 공간");
+            Assert.AreEqual(1, t.ChanceWalls.Count);
+            Assert.AreEqual(TileKind.Floor, t.TileAt(6, 6), "확률 장애물 칸의 기본값은 바닥");
         }
 
         [Test]
-        public void ShouldParsePlatformAndHazardTiles()
+        public void ShouldParseLegacyFloorAndHazardTiles()
         {
             var rows = Shell(RoomSizeClass.Small);
             rows = Replace(rows, 9, 5, '-');
             rows = Replace(rows, 9, 6, '^');
             rows = Replace(rows, 9, 7, '~');
             var t = RoomTemplateParser.Parse(rows, "terrain").Template;
-            Assert.AreEqual(TileKind.Platform, t.TileAt(5, 5));
+            Assert.AreEqual(TileKind.Floor, t.TileAt(5, 5));
             Assert.AreEqual(TileKind.Hazard, t.TileAt(6, 5));
             Assert.AreEqual(TileKind.Hazard, t.TileAt(7, 5)); // '~'는 레거시 별칭 → 같은 Hazard
         }

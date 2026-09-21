@@ -7,7 +7,7 @@ namespace Tests.EditMode
 {
     public class RoomLayoutFromTemplateTests
     {
-        // 바닥 위에 확률 발판 4칸과 확률 적 2칸을 둔 Small 방
+        // 바닥 위에 확률 벽 4칸과 확률 적 2칸을 둔 Small 방
         private static RoomTemplate Template()
         {
             var d = RoomDimensions.Of(RoomSizeClass.Small);
@@ -20,11 +20,11 @@ namespace Tests.EditMode
                 for (int x = 0; x < w; x++)
                 {
                     bool border = x == 0 || x == w - 1 || y == 0 || y == h - 1;
-                    char c = !border ? '.' : (y == 0 ? '=' : '#');
+                    char c = !border ? '.' : '#';
                     if (y == 0 && x == w / 2) c = 'D';
                     else if (y == h - 1 && x == w / 2) c = 'D';
-                    else if (x == 0 && y == 1) c = 'D';
-                    else if (x == w - 1 && y == 1) c = 'D';
+                    else if (x == 0 && y == h / 2) c = 'D';
+                    else if (x == w - 1 && y == h / 2) c = 'D';
                     else if (y == 4 && x >= 5 && x <= 8) c = '?';
                     else if (y == 1 && (x == 10 || x == 14)) c = '%';
                     sb.Append(c);
@@ -58,28 +58,28 @@ namespace Tests.EditMode
             {
                 var a = RoomLayout.Resolve(t, 0);
                 var b = RoomLayout.Resolve(t, seed + 1);
-                foreach (var c in t.ChancePlatforms)
+                foreach (var c in t.ChanceWalls)
                     if (a.Tiles[c.x, c.y] != b.Tiles[c.x, c.y]) anyDifference = true;
             }
             Assert.IsTrue(anyDifference, "템플릿 하나가 시드마다 다른 방이 되어야 한다");
         }
 
         [Test]
-        public void AllSolidModeShouldFillEveryChancePlatform()
+        public void AllSolidModeShouldFillEveryChanceWall()
         {
             var t = Template();
             var r = RoomLayout.Resolve(t, ChanceMode.AllSolid);
-            foreach (var c in t.ChancePlatforms)
-                Assert.AreEqual(TileKind.Platform, r.Tiles[c.x, c.y]);
+            foreach (var c in t.ChanceWalls)
+                Assert.AreEqual(TileKind.Wall, r.Tiles[c.x, c.y]);
         }
 
         [Test]
-        public void AllEmptyModeShouldClearEveryChancePlatform()
+        public void AllEmptyModeShouldClearEveryChanceWall()
         {
             var t = Template();
             var r = RoomLayout.Resolve(t, ChanceMode.AllEmpty);
-            foreach (var c in t.ChancePlatforms)
-                Assert.AreEqual(TileKind.Empty, r.Tiles[c.x, c.y]);
+            foreach (var c in t.ChanceWalls)
+                Assert.AreEqual(TileKind.Floor, r.Tiles[c.x, c.y]);
         }
 
         [Test]
@@ -97,7 +97,7 @@ namespace Tests.EditMode
         {
             var t = Template();
             var r = RoomLayout.Resolve(t, 7);
-            Assert.AreEqual(TileKind.Floor, r.Tiles[1, 0], "바닥은 확률과 무관하다");
+            Assert.AreEqual(TileKind.Wall, r.Tiles[1, 0], "테두리 벽은 확률과 무관하다");
             Assert.AreEqual(TileKind.Wall, r.Tiles[0, 5], "벽은 확률과 무관하다");
             Assert.AreEqual(4, r.Doors.Count);
         }

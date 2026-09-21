@@ -18,13 +18,13 @@ namespace Help.Dungeon
     public static class RoomTemplateParser
     {
         public const char Wall = '#';
-        public const char Ground = '=';
-        public const char Platform = '-';
-        public const char Air = '.';
+        public const char Ground = '=';       // 레거시 바닥 별칭
+        public const char Platform = '-';     // 레거시 발판 별칭
+        public const char Air = '.';          // 쿼터뷰의 이동 가능한 바닥
         public const char Spike = '^';   // 피해 바닥(표준)
         public const char Pit = '~';     // 레거시 별칭 — Phase 3 템플릿 재작업 후 제거
         public const char Door = 'D';
-        public const char ChancePlatform = '?';
+        public const char ChanceWall = '?';
         public const char ChanceEnemy = '%';
         public const char CommentPrefix = ';';
 
@@ -62,7 +62,7 @@ namespace Help.Dungeon
             var tiles = new TileKind[width, height];
             var markers = new List<RoomMarker>();
             var doors = new Dictionary<Direction, Vector2Int>();
-            var chancePlatforms = new List<Vector2Int>();
+            var chanceWalls = new List<Vector2Int>();
             var chanceEnemies = new List<Vector2Int>();
 
             for (int row = 0; row < height; row++)
@@ -77,8 +77,8 @@ namespace Help.Dungeon
                     {
                         case Wall: tiles[x, y] = TileKind.Wall; break;
                         case Ground: tiles[x, y] = TileKind.Floor; break;
-                        case Platform: tiles[x, y] = TileKind.Platform; break;
-                        case Air: tiles[x, y] = TileKind.Empty; break;
+                        case Platform:
+                        case Air: tiles[x, y] = TileKind.Floor; break;
                         // D-12: 가시와 구덩이를 하나로 합쳤다. '^'가 표준이고
                         // '~'는 기존 템플릿이 남아 있는 동안만 받아주는 별칭이다(Phase 3에서 제거).
                         case Spike:
@@ -90,20 +90,20 @@ namespace Help.Dungeon
                             RegisterDoor(result, name, doors, cell, width, height);
                             break;
 
-                        case ChancePlatform:
-                            tiles[x, y] = TileKind.Empty;
-                            chancePlatforms.Add(cell);
+                        case ChanceWall:
+                            tiles[x, y] = TileKind.Floor;
+                            chanceWalls.Add(cell);
                             break;
 
                         case ChanceEnemy:
-                            tiles[x, y] = TileKind.Empty;
+                            tiles[x, y] = TileKind.Floor;
                             chanceEnemies.Add(cell);
                             break;
 
                         default:
                             if (MarkerChars.IndexOf(c) >= 0)
                             {
-                                tiles[x, y] = TileKind.Empty;
+                                tiles[x, y] = TileKind.Floor;
                                 markers.Add(new RoomMarker(c, cell));
                             }
                             else
@@ -124,7 +124,7 @@ namespace Help.Dungeon
             if (result.Errors.Count > 0) return result;
 
             result.Template = new RoomTemplate(name, width, height, sizeClass, tiles,
-                                               markers, doors, chancePlatforms, chanceEnemies);
+                                               markers, doors, chanceWalls, chanceEnemies);
             return result;
         }
 

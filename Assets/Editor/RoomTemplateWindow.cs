@@ -4,7 +4,6 @@ using System.Linq;
 using UnityEditor;
 using UnityEngine;
 using Help.Dungeon;
-using Help.Player;
 
 namespace Help.EditorTools
 {
@@ -25,7 +24,6 @@ namespace Help.EditorTools
         private ResolvedRoom _preview;
 
         private bool _showReachability = true;
-        private bool _allowDash = true;
         private int _chanceSeed;
         private ChanceMode _chanceMode = ChanceMode.Seeded;
         private Vector2Int? _probe;   // 클릭한 칸에서 갈 수 있는 범위를 본다
@@ -113,8 +111,7 @@ namespace Help.EditorTools
             if (_parsed == null || !_parsed.Success) return;
 
             _preview = RoomLayout.Resolve(_parsed.Template, _chanceMode, _chanceSeed);
-            _validation = RoomTemplateValidator.Validate(_preview, _parsed.Template.Name,
-                                                         PlatformerMetrics.PlayerDefault);
+            _validation = RoomTemplateValidator.Validate(_preview, _parsed.Template.Name);
         }
 
         // --- 상단: 옵션 ------------------------------------------------------
@@ -130,10 +127,6 @@ namespace Help.EditorTools
                 if (EditorGUI.EndChangeCheck()) Revalidate();
 
                 _showReachability = GUILayout.Toggle(_showReachability, "도달성", EditorStyles.toolbarButton, GUILayout.Width(60));
-                EditorGUI.BeginChangeCheck();
-                _allowDash = GUILayout.Toggle(_allowDash, "대시 허용", EditorStyles.toolbarButton, GUILayout.Width(70));
-                if (EditorGUI.EndChangeCheck()) Repaint();
-
                 GUILayout.FlexibleSpace();
                 if (_probe.HasValue && GUILayout.Button("탐침 해제", EditorStyles.toolbarButton)) { _probe = null; Repaint(); }
             }
@@ -143,7 +136,6 @@ namespace Help.EditorTools
 
         private static readonly Color CWall = new Color(0.38f, 0.40f, 0.46f);
         private static readonly Color CFloor = new Color(0.42f, 0.31f, 0.19f);
-        private static readonly Color CPlatform = new Color(0.60f, 0.43f, 0.24f);
         private static readonly Color CSpike = new Color(0.80f, 0.28f, 0.28f); // 피해 바닥(D-12로 통합)
         private static readonly Color CAir = new Color(0.12f, 0.14f, 0.18f);
         private static readonly Color CReach = new Color(0.25f, 0.95f, 0.45f, 0.40f);
@@ -190,24 +182,15 @@ namespace Help.EditorTools
 
         private void DrawReachabilityOverlay(ResolvedRoom room, System.Func<int, int, Rect> cellRect)
         {
-            var metrics = PlatformerMetrics.PlayerDefault;
-            var options = new AnalyzerOptions { AllowDash = _allowDash };
-
-            // 탐침이 있으면 "여기서 갈 수 있는 곳", 없으면 "문에서 갈 수 있는 곳"
-            IEnumerable<Vector2Int> starts = _probe.HasValue
-                ? new[] { _probe.Value }
-                : (_validation != null ? _validation.DoorAccess.Values : System.Array.Empty<Vector2Int>());
-            if (!starts.Any()) return;
-
-            var set = ReachabilityAnalyzer.Analyze(room.Tiles, starts, metrics, options);
+            ReachabilitySet set = _probe.HasValue
+                ? PlanarReachabilityAnalyzer.Analyze(room.Tiles, _probe.Value)
+                : _validation?.Reachable;
+            if (set == null) return;
 
             for (int x = 0; x < room.Width; x++)
                 for (int y = 0; y < room.Height; y++)
                 {
-                    if (ResolvedRoom.BlocksMovement(room.Tiles[x, y])) continue;
-                    bool standable = ResolvedRoom.IsStandable(room.TileAt(x, y - 1))
-                                     && !ResolvedRoom.IsHazard(room.TileAt(x, y - 1));
-                    if (!standable) continue;
+                    if (!ResolvedRoom.IsWalkable(room.Tiles[x, y])) continue;
                     EditorGUI.DrawRect(cellRect(x, y), set.Contains(new Vector2Int(x, y)) ? CReach : CUnreach);
                 }
         }
@@ -230,7 +213,6 @@ namespace Help.EditorTools
         {
             TileKind.Wall => CWall,
             TileKind.Floor => CFloor,
-            TileKind.Platform => CPlatform,
             TileKind.Hazard => CSpike,
             _ => CAir,
         };
@@ -269,11 +251,9 @@ namespace Help.EditorTools
             {
                 var t = _parsed.Template;
                 EditorGUILayout.LabelField(
-                    $"{t.Width}x{t.Height} ({t.SizeClass})  ·  마커 {t.Markers.Count}  ·  확률칸 {t.ChancePlatforms.Count + t.ChanceEnemies.Count}");
+                    $"{t.Width}x{t.Height} ({t.SizeClass})  ·  마커 {t.Markers.Count}  ·  확률칸 {t.ChanceWalls.Count + t.ChanceEnemies.Count}");
 
-                var m = PlatformerMetrics.PlayerDefault;
-                EditorGUILayout.LabelField(
-                    $"문법: 단차 ≤3타일  ·  갭 ≤5칸(대시 시 7칸)  ·  통로 높이 ≥{m.RequiredHeadroomTiles}칸  ·  점프 {m.MaxJumpHeight:F2}타일");
+                EditorGUILayout.LabelField("문법: 내부 바닥 연결 · 대각선 코너 통과 금지 · 모든 문/마커 도달 가능");
             }
 
             EditorGUILayout.EndScrollView();

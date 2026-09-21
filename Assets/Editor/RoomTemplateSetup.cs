@@ -107,7 +107,7 @@ namespace Help.EditorTools
             return System.Enum.TryParse(fileName.Substring(0, i), out type);
         }
 
-        // 씬의 RoomManager에 라이브러리와 새 지형 타일(발판/가시/구덩이)을 물린다.
+        // 씬의 RoomManager에 템플릿 라이브러리와 위험 바닥 타일을 연결한다.
         private static void WireScene(RoomTemplateLibrary library)
         {
             var manager = Object.FindFirstObjectByType<RoomManager>(FindObjectsInactive.Include);
@@ -119,7 +119,6 @@ namespace Help.EditorTools
 
             var so = new SerializedObject(manager);
             SetRef(so, "_templateLibrary", library);
-            SetRef(so, "_platformTile", LoadTile("PlatformTile"));
             SetRef(so, "_hazardTile", LoadTile("HazardTile"));
             so.ApplyModifiedPropertiesWithoutUndo();
 

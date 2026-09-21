@@ -15,7 +15,7 @@ namespace Tests.EditMode
     // (과거 Hitbox가 씬에 없어 공격이 무효였던 결함 D-A, RoomManager 미배치 결함 D-B 재발 방지)
     public class TestSceneWiringTests
     {
-        private const string ScenePath = "Assets/Scenes/TestScene/TestScene.unity";
+        private const string ScenePath = "Assets/Scenes/QuarterViewPrototype.unity";
 
         [Test]
         public void TestScene_PlayerHasHitbox_ForAttackToDealDamage()
@@ -68,7 +68,7 @@ namespace Tests.EditMode
         // 오브젝트 "존재"뿐 아니라 직렬화 값(마스크/참조)의 올바른 배선까지 검증한다.
         // (과거 _groundLayer 마스크가 비어 점프가 불능이던 결함 D1 재발 방지)
         [Test]
-        public void TestScene_PlayerController_GroundLayerAndCheckAreWired()
+        public void TestScene_PlayerController_DoesNotRequirePlatformGrounding()
         {
             var scene = EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.Additive);
             try
@@ -77,10 +77,14 @@ namespace Tests.EditMode
                 Assert.IsNotNull(pc, "씬에 PlayerController 없음");
 
                 var so = new SerializedObject(pc);
-                Assert.AreNotEqual(0, so.FindProperty("_groundLayer").intValue,
-                    "_groundLayer 마스크가 비어 있음 — 접지 판정이 항상 false가 되어 점프 불능");
-                Assert.IsNotNull(so.FindProperty("_groundCheck").objectReferenceValue,
-                    "_groundCheck 참조가 비어 있음");
+                Assert.IsNull(so.FindProperty("_groundLayer"));
+                Assert.IsNull(so.FindProperty("_groundCheck"));
+                var rb = pc.GetComponent<Rigidbody2D>();
+                Assert.IsNotNull(rb);
+                Assert.AreEqual(0f, rb.gravityScale);
+                Assert.IsTrue(rb.freezeRotation);
+                Assert.IsNotNull(pc.GetComponent<CircleCollider2D>());
+                Assert.IsNull(pc.GetComponent<CapsuleCollider2D>());
             }
             finally { EditorSceneManager.CloseScene(scene, true); }
         }

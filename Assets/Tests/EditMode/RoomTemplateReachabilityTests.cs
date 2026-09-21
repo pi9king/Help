@@ -3,7 +3,6 @@ using System.IO;
 using NUnit.Framework;
 using UnityEngine;
 using Help.Dungeon;
-using Help.Player;
 
 namespace Tests.EditMode
 {
@@ -55,7 +54,6 @@ namespace Tests.EditMode
         [Test]
         public void EveryTemplateShouldBeFullyTraversable()
         {
-            var metrics = PlatformerMetrics.PlayerDefault;
             var failures = new List<string>();
 
             foreach (var file in TemplateFiles())
@@ -64,7 +62,7 @@ namespace Tests.EditMode
                 var parsed = RoomTemplateParser.Parse(File.ReadAllText(file), name);
                 if (!parsed.Success) continue;  // 파싱 실패는 위 테스트가 잡는다
 
-                var validation = RoomTemplateValidator.ValidateAllChanceExtremes(parsed.Template, metrics);
+                var validation = RoomTemplateValidator.ValidateAllChanceExtremes(parsed.Template);
                 failures.AddRange(validation.Errors);
             }
 

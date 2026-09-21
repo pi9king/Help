@@ -31,13 +31,11 @@ namespace Help.Dungeon
         public TileKind TileAt(int x, int y) =>
             x < 0 || y < 0 || x >= Width || y >= Height ? TileKind.Wall : Tiles[x, y];
 
-        // 서 있을 수 있는(=위에 올라설 수 있는) 지형인가
-        // D-12: 피해 바닥도 설 수 있다 — 못 서면 빠진 곳에서 걸어 나올 수가 없다.
-        public static bool IsStandable(TileKind k) =>
-            k == TileKind.Floor || k == TileKind.Wall || k == TileKind.Platform || k == TileKind.Hazard;
+        public static bool IsWalkable(TileKind k) =>
+            k == TileKind.Floor || k == TileKind.Hazard;
 
-        // 몸이 통과할 수 없는 지형인가 (발판은 위에서만 막으므로 통과 가능으로 본다)
-        public static bool BlocksMovement(TileKind k) => k == TileKind.Floor || k == TileKind.Wall;
+        // 쿼터뷰에서 바닥은 이동 공간이고 벽만 이동을 막는다.
+        public static bool BlocksMovement(TileKind k) => k == TileKind.Wall || k == TileKind.Empty;
 
         // 밟으면 아픈 칸. **막는 칸이 아니다** — 길을 막는 건 벽의 일이고,
         // 위험 지형은 비용이다(D-12). 도달성은 통과를 허용한다.

@@ -224,9 +224,9 @@ namespace Help.Dungeon
 
             // 시작 방(Tutorial)은 K·Y와 잠긴 문이 손으로 짜인 학습 공간이라 예산 글자를 얹지 않는다.
             // (PlaceBonusLoot은 원래부터 제외하고 있었다 — 여기만 빠져 있었다.)
-            // 단, 뺐더니 놓을 곳이 없어지면 교착이므로 원래 목록으로 되돌린다.
-            var withoutTutorial = targets.Where(r => r.Type != RoomType.Tutorial).ToList();
-            if (withoutTutorial.Count > 0) targets = withoutTutorial;
+            // 튜토리얼만 도달 가능한 시드는 재시도한다. 시작 방을 오염시키는 것보다
+            // 다른 레이아웃을 고르는 편이 학습 흐름과 재료 보장 양쪽에 정직하다.
+            targets = targets.Where(r => r.Type != RoomType.Tutorial).ToList();
 
             if (targets.Count == 0) return false;
 
