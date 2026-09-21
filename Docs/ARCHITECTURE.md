@@ -48,7 +48,7 @@ Help.UI         — HUD, 메뉴, 미니맵, 인벤토리 UI
 - **이벤트 기반 통신**: 시스템 간 직접 참조 최소화, `event Action<T>`로 느슨한 결합
 - **데이터 주도 설계**: 방 템플릿, 아이템 정의, 적 스탯은 ScriptableObject로 관리
 
-## 구현된 파일 구조 (2026-07-04 기준)
+## 구현된 파일 구조 (2026-09-21 기준)
 
 ```
 Assets/Scripts/
@@ -57,14 +57,16 @@ Assets/Scripts/
 │   ├── GameManager.cs        — 싱글턴, Inventory + CraftingSystem + DungeonMap + RecipeDatabase(공개 접근자) 보유. _seedStarterMaterials=true면 시작 시 모든 알파벳 재료 2개씩 지급(프로토타입 테스트용). RestartRun()=사망 시 인벤토리 Clear+시드+새 던전+OnRunReset 통지
 │   └── CameraFollow.cs       — 플레이어 추적 카메라 (LateUpdate, 보간)
 ├── Player/
-│   ├── PlayerState.cs        — enum (Idle/Running/Jumping/Falling/Dashing/Attacking/Hurt/Dead)
+│   ├── PlayerState.cs        — enum (Idle/Running/Dashing/Attacking/Hurt/Dead)
+│   ├── TopDownMovement.cs    — 정규화된 8방향 이동·방향 대시 계산 순수 로직
 │   ├── PlayerStats.cs        — HP, 방어, 이동속도, 장비 보너스 적용/해제 등 순수 C# (OnHpChanged, OnDied 이벤트). 사망 후 TakeDamage/Heal 무효(부활 방지), Reset()으로만 부활(런 리셋)
-│   └── PlayerController.cs   — MonoBehaviour, Input System 콜백, 대시/점프/공격 타이머, AttackPerformed 이벤트,
-│                                Start()에서 Inventory.OnItemEquipped/OnItemUnequipped 구독해 장비 스탯+무기 속성(EquippedElement) 반영, OnDestroy에서 구독 해제. SetUiPanelOpen()로 UI 패널 오픈 중 게임플레이 입력(이동/점프/대시/공격/E) 게이트(비모달 UI 입력 누수 방지)
+│   └── PlayerController.cs   — MonoBehaviour, XY 이동·방향 대시·포인터/스틱 조준·공격 타이머, AttackPerformed 이벤트.
+│                                Rigidbody2D 중력은 0이며 루트는 뒤집지 않고 SpriteRenderer만 좌우 반전한다.
 ├── Combat/
 │   ├── ElementType.cs        — enum 15종 (None + Fire/Ice/Steel/…/Spike)
 │   ├── DamageCalculator.cs   — static: 속성 불일치 시 10% 데미지(최소 1 보장 — 완전 면역 아님)
-│   ├── Hitbox.cs             — 공격 판정 콜라이더. 활성 창/배치(Configure: reach/size)는 PlayerAttack(모션)이 구동. 적중 시 데미지+EnemyBase.OnHitReceived(넉백/플래시)+HitStop+CameraShake
+│   ├── AimGeometry.cs        — 조준 벡터를 공격 판정 위치·회전으로 변환하는 순수 로직
+│   ├── Hitbox.cs             — 조준 방향 기반 공격 판정 콜라이더. 활성 창/배치는 PlayerAttack이 구동
 │   ├── AttackMotionClock.cs — 순수: 공격 타이밍(Windup→Active→Recovery→Done)+Active 진행도. 근접/원거리/마법 공용. EditMode 테스트
 │   ├── AttackKind.cs        — enum: MeleeArc(구현)/Projectile(원거리·마법, 추후)
 │   ├── AttackMotionDef.cs   — 공격 1종 데이터(타이밍/사거리/범위/호 각도/색). 무기별 분리 = 데이터 교체. 추후 WeaponCategory→라이브러리
