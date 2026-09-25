@@ -217,8 +217,18 @@ namespace Help.Dungeon
             }
 
             // 방 밖은 벽으로 본다 — 플레이어가 방을 빠져나가는 경로가 생기면 안 된다.
+            //
+            // ★ 단 **격자 아래(y < 0)는 예외로 빈 공간**이다. 여기를 벽으로 돌려주면
+            //   IsStandable(Wall)==true라서 TrySupport가 y=-1을 딛고 설 땅으로 보고,
+            //   바닥에 뚫린 구멍 위를 **보이지 않는 땅을 밟고 걸어서** 지나가 버린다
+            //   (갭 16칸·18칸도 건넜다 — 2026-09-19 측정). 갭이 hazard 타일('~')이던
+            //   시절엔 실재 타일이라 이 경로를 안 밟았고, D-12에서 갭을 빈 칸('.')으로
+            //   바꾸면서 드러났다. 아래로 떨어지는 것은 탈출이 아니라 추락이므로
+            //   막지 않고, OutOfBounds가 경로를 끊는다.
             public TileKind At(int x, int y) =>
-                x < 0 || y < 0 || x >= Width || y >= Height ? TileKind.Wall : _tiles[x, y];
+                y < 0 ? TileKind.Empty
+                : x < 0 || x >= Width || y >= Height ? TileKind.Wall
+                : _tiles[x, y];
 
             private int MinCol(float px) => Mathf.FloorToInt(px - _o.BodyWidth * 0.5f);
             private int MaxCol(float px) => Mathf.FloorToInt(px + _o.BodyWidth * 0.5f - Eps);

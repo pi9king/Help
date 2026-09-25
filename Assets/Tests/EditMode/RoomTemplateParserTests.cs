@@ -163,5 +163,25 @@ namespace Tests.EditMode
             Assert.AreEqual(TileKind.Hazard, t.TileAt(6, 5));
             Assert.AreEqual(TileKind.Hazard, t.TileAt(7, 5)); // '~'는 레거시 별칭 → 같은 Hazard
         }
+
+        // 격자 밖의 뜻은 방향마다 다르다: 옆·위는 **벽**(방을 빠져나가면 안 된다),
+        // 아래는 **빈 공간**(떨어지는 것은 탈출이 아니라 추락이다).
+        //
+        // 아래까지 벽으로 돌려주면 IsStandable(Wall)==true라서 바닥에 뚫린 구멍이
+        // "밟고 설 수 있는 자리"가 되고, 플레이어가 구멍 위를 걸어서 지나간다 —
+        // 그러면 갭 문법도 도달성 자동검증도 통째로 무의미해진다(2026-09-19 실측: 갭 16칸 통과).
+        [Test]
+        public void OutsideGrid_IsWallOnSidesAndTop_ButEmptyBelow()
+        {
+            var t = RoomTemplateParser.Parse(Shell(RoomSizeClass.Small), "bounds").Template;
+
+            Assert.AreEqual(TileKind.Wall, t.TileAt(-1, 1), "왼쪽 바깥은 벽");
+            Assert.AreEqual(TileKind.Wall, t.TileAt(t.Width, 1), "오른쪽 바깥은 벽");
+            Assert.AreEqual(TileKind.Wall, t.TileAt(1, t.Height), "천장 위는 벽");
+
+            Assert.AreEqual(TileKind.Empty, t.TileAt(1, -1), "바닥 아래는 빈 공간");
+            Assert.IsFalse(ResolvedRoom.IsStandable(t.TileAt(1, -1)),
+                "격자 아래를 딛고 설 수 있으면 바닥 구멍 위를 걸어서 지나간다");
+        }
     }
 }

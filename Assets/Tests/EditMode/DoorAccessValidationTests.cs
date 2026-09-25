@@ -16,7 +16,11 @@ namespace Tests.EditMode
     // 들어오는 것(떨어지면 된다)과 나가는 것(문까지 올라가야 한다)은 다른 조건이다.
     public class DoorAccessValidationTests
     {
-        private static readonly PlatformerMetrics Metrics = new PlatformerMetrics();
+        // ★ new PlatformerMetrics()는 struct 기본값이라 이동속도·점프력이 전부 0이다 —
+        //   그러면 플레이어가 한 칸도 못 움직여 모든 문 쌍이 불통으로 나오고,
+        //   "실패를 기대하는" 테스트만 우연히 통과한다(2026-09-19 발견).
+        //   검증은 반드시 실제 튜닝값으로 한다.
+        private static readonly PlatformerMetrics Metrics = PlatformerMetrics.PlayerDefault;
 
         // 25×15 Small 방 한 장을 문자열로 짓는다. 천장/바닥/좌우 벽 + 4방향 문.
         private static List<string> BuildRoom(params (int row, string content)[] overrides)

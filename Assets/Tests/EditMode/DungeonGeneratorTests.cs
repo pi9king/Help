@@ -39,6 +39,33 @@ namespace Tests.EditMode
             Assert.AreEqual(RoomType.Boss, boss.Type);
         }
 
+        // DESIGN.md 2026-09-10: "환경 퍼즐방은 층마다 정확히 1개 보장".
+        // 랜덤 배정이던 때는 표본 200층 중 36%에 환경 퍼즐방이 없었다(정적 재미 리포트).
+        [Test]
+        public void ShouldPlaceExactlyOneEnvironmentPuzzlePerFloor()
+        {
+            for (int seed = 0; seed < 200; seed++)
+            {
+                var map = _gen.Generate(new DungeonConfig { Seed = seed });
+                int env = 0;
+                foreach (var room in map.Rooms.Values)
+                    if (room.Type == RoomType.EnvironmentPuzzle) env++;
+                Assert.AreEqual(1, env, $"seed {seed}: 환경 퍼즐방 {env}개");
+            }
+        }
+
+        // 같은 결정의 후반부: "그래도 없으면 보스방은 무조건 열린다" — 놓을 자리가 없는 층도 생성은 돼야 한다.
+        // 시작 방·보스 방뿐인 층에는 환경 퍼즐방을 놓을 자리가 없다.
+        [Test]
+        public void ShouldGenerateFloorWithoutEnvironmentPuzzleWhenNoRoomIsAvailable()
+        {
+            var map = _gen.Generate(new DungeonConfig { Seed = 3, MinRooms = 2, MaxRooms = 2 });
+
+            Assert.AreEqual(2, map.Rooms.Count);
+            foreach (var room in map.Rooms.Values)
+                Assert.AreNotEqual(RoomType.EnvironmentPuzzle, room.Type);
+        }
+
         [Test]
         public void ShouldProduceSameDungeonForSameSeed()
         {

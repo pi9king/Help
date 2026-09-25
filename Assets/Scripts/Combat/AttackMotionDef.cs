@@ -31,5 +31,15 @@ namespace Help.Combat
 
         // 맨손/미등록 무기용 기본 근접 모션
         public static AttackMotionDef Default() => new AttackMotionDef();
+
+        // 공격 속도 배수를 적용한 사본. 모양(사거리·범위·각도)은 그대로, 세 구간 타이밍만 줄어든다.
+        public AttackMotionDef ScaledBy(float speedMult)
+        {
+            var copy = (AttackMotionDef)MemberwiseClone();
+            copy.Windup = AttackSpeed.Scale(Windup, speedMult);
+            copy.Active = AttackSpeed.Scale(Active, speedMult);
+            copy.Recovery = AttackSpeed.Scale(Recovery, speedMult);
+            return copy;
+        }
     }
 }

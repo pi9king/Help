@@ -28,8 +28,14 @@ namespace Help.Dungeon
             Doors = doors;
         }
 
+        // 방 밖은 벽. 단 **격자 아래(y < 0)는 빈 공간**이다 —
+        // 벽으로 돌려주면 IsStandable(Wall)==true라서 바닥에 뚫린 구멍이
+        // "밟고 설 수 있는 자리"로 보인다(ReachabilityAnalyzer.World.At과 같은 규칙).
+        // 같은 판정이 두 곳에 구현돼 있으므로 한쪽만 고치면 시뮬과 검증기가 서로 다른 것을 본다.
         public TileKind TileAt(int x, int y) =>
-            x < 0 || y < 0 || x >= Width || y >= Height ? TileKind.Wall : Tiles[x, y];
+            y < 0 ? TileKind.Empty
+            : x < 0 || x >= Width || y >= Height ? TileKind.Wall
+            : Tiles[x, y];
 
         // 서 있을 수 있는(=위에 올라설 수 있는) 지형인가
         // D-12: 피해 바닥도 설 수 있다 — 못 서면 빠진 곳에서 걸어 나올 수가 없다.

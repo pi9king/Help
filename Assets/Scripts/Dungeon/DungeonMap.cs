@@ -14,6 +14,10 @@ namespace Help.Dungeon
         // 방들에 뿌린 글자의 총량이 곧 이 목록의 레시피 합이다.
         public List<Help.Item.ItemDefinition> FloorRecipes { get; } = new();
 
+        // 이 층을 실제로 만든 시드. 랜덤 런(Seed=-1)이어도 생성기가 뽑은 값이 기록된다 —
+        // 방 시드(RoomSeeds)가 이걸 써서 "런마다 다르고 런 안에서는 고정"이 되고, 같은 층을 재현할 수 있다.
+        public int Seed { get; set; }
+
         public DungeonMap((int x, int y) start)
         {
             StartPosition = start;

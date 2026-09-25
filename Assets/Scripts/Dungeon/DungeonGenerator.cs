@@ -29,9 +29,15 @@ namespace Help.Dungeon
         // 조건/루트 없는 순수 레이아웃 (하위호환)
         public DungeonMap Generate(DungeonConfig config)
         {
-            _rng = config.Seed < 0 ? new Random() : new Random(config.Seed);
-            return BuildLayout(config);
+            int seed = config.Seed < 0 ? DrawSeed() : config.Seed;
+            _rng = new Random(seed);
+            var map = BuildLayout(config);
+            map.Seed = seed;
+            return map;
         }
+
+        // 랜덤 런에서도 실제로 쓴 시드를 남기기 위해, new Random() 대신 시드를 먼저 뽑는다.
+        private static int DrawSeed() => Guid.NewGuid().GetHashCode() & 0x3FFFFFFF;
 
         // 진입 조건 + 재료 보장 불변식까지 만족하는 층 생성.
         // 조건부 방에 (제작 가능한 능력에서) 조건을 부여하고, 자유 방에 필요 재료를 배치한 뒤
@@ -46,10 +52,13 @@ namespace Help.Dungeon
             var weapons = AvailableWeaponCategories(database);
 
             DungeonMap last = null;
+            int baseSeed = config.Seed < 0 ? DrawSeed() : config.Seed;
             for (int attempt = 0; attempt < MaxAttempts; attempt++)
             {
-                _rng = config.Seed < 0 ? new Random() : new Random(config.Seed + attempt);
+                int seed = baseSeed + attempt;
+                _rng = new Random(seed);
                 var map = BuildLayout(config);
+                map.Seed = seed;
                 AssignEntryConditions(map, elements, weapons, capabilitiesOf);
                 last = map;
 
@@ -134,11 +143,12 @@ namespace Help.Dungeon
                 if (d > maxDist) { maxDist = d; farthest = pos; }
             }
 
+            // 환경 퍼즐은 랜덤 풀에 넣지 않는다 — 아래에서 층마다 정확히 1개를 따로 놓는다.
             var typePool = new List<RoomType>
             {
                 RoomType.Combat, RoomType.Combat, RoomType.Combat,
                 RoomType.Treasure, RoomType.Shop,
-                RoomType.EnvironmentPuzzle, RoomType.PurePuzzle, RoomType.CombatPuzzle
+                RoomType.PurePuzzle, RoomType.CombatPuzzle
             };
 
             // 특수방(비-E 아이템 보상/제작)은 층마다 있을 수도, 없을 수도 있다.
@@ -150,12 +160,20 @@ namespace Help.Dungeon
                 if (candidates.Count > 0) secret = candidates[_rng.Next(candidates.Count)];
             }
 
+            // DESIGN.md 2026-09-10: 환경 퍼즐방은 층마다 **정확히 1개**(보스방의 열쇠가 될 방).
+            // 랜덤 풀에 두면 0개인 층이 36%, 2개 이상인 층도 나왔다(정적 재미 리포트).
+            // 놓을 자리가 없는 층(시작·보스·특수방뿐)은 0개로 두고, 보스방 게이트는 fail-open 한다.
+            (int, int)? environment = null;
+            var envCandidates = list.Where(p => p != start && p != farthest && !(secret.HasValue && p == secret.Value)).ToList();
+            if (envCandidates.Count > 0) environment = envCandidates[_rng.Next(envCandidates.Count)];
+
             foreach (var pos in list)
             {
                 RoomType type;
                 if (pos == start) type = RoomType.Tutorial; // 시작 방은 전투 없는 안전한 튜토리얼 방
                 else if (pos == farthest) type = RoomType.Boss;
                 else if (secret.HasValue && pos == secret.Value) type = RoomType.Secret;
+                else if (environment.HasValue && pos == environment.Value) type = RoomType.EnvironmentPuzzle;
                 else type = typePool[_rng.Next(typePool.Count)];
                 map.AddRoom(new Room(pos.Item1, pos.Item2, type));
             }
@@ -224,9 +242,13 @@ namespace Help.Dungeon
 
             // 시작 방(Tutorial)은 K·Y와 잠긴 문이 손으로 짜인 학습 공간이라 예산 글자를 얹지 않는다.
             // (PlaceBonusLoot은 원래부터 제외하고 있었다 — 여기만 빠져 있었다.)
-            // 단, 뺐더니 놓을 곳이 없어지면 교착이므로 원래 목록으로 되돌린다.
-            var withoutTutorial = targets.Where(r => r.Type != RoomType.Tutorial).ToList();
-            if (withoutTutorial.Count > 0) targets = withoutTutorial;
+            //
+            // 예전엔 "뺐더니 놓을 곳이 없으면 원래 목록으로 되돌린다"고 폴백했는데,
+            // 그러면 튜토리얼 방에 열쇠 재료가 떨어진다(seed 1에서 실제로 3개 배치됨).
+            // 제외는 예외 없는 규칙이라, 놓을 곳이 없으면 **이 시도를 실패시켜 다른 층을 굴린다** —
+            // 30회 모두 실패하면 조건 없는 폴백 층이 되고, 그 경로는 GuaranteedLoot을 비우므로
+            // 어느 쪽으로 끝나든 튜토리얼 방은 비어 있다.
+            targets = targets.Where(r => r.Type != RoomType.Tutorial).ToList();
 
             if (targets.Count == 0) return false;
 

@@ -12,7 +12,8 @@ namespace Help.Dungeon
     //
     // D-13: 층마다 템플릿 풀이 다르다 — 1층은 평탄하게, 3층은 험하게.
     //
-    // 같은 방(좌표)은 항상 같은 템플릿을 받는다 — 나갔다 돌아왔는데 지형이 바뀌면 안 된다.
+    // 같은 런 안에서 같은 방(좌표)은 항상 같은 템플릿을 받는다 — 나갔다 돌아왔는데 지형이 바뀌면 안 된다.
+    // 런이 바뀌면 달라진다(RoomSeeds: 런 시드·층 번호 포함, 2026-09-20 결정).
     [CreateAssetMenu(fileName = "RoomTemplateLibrary", menuName = "Help/Room Template Library")]
     public class RoomTemplateLibrary : ScriptableObject
     {

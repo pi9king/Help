@@ -369,7 +369,8 @@ namespace Help.Dungeon
         }
 
         // 같은 방=같은 콘텐츠가 되도록 방 좌표로 결정적 seed.
-        private static int RoomSeed(Room room) => (room.X * 73856093) ^ (room.Y * 19349663);
+        // 런마다 다르고 런 안에서는 고정(RoomSeeds). 재방문해도 같은 템플릿·콘텐츠·글자 배분.
+        private int RoomSeed(Room room) => RoomSeeds.For(_map != null ? _map.Seed : 0, CurrentFloor, room.X, room.Y);
 
         // 방 크기를 정하고 카메라에 방 경계를 알린다.
         // Small 방은 카메라가 중앙 고정되고, Wide/Tall은 경계 안에서 플레이어를 따라간다.

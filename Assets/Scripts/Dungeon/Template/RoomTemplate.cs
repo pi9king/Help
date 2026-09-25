@@ -48,8 +48,12 @@ namespace Help.Dungeon
             ChanceEnemies = chanceEnemies;
         }
 
+        // 방 밖은 벽. 단 **격자 아래(y < 0)는 빈 공간**이다 —
+        // ResolvedRoom.TileAt · ReachabilityAnalyzer.World.At과 같은 규칙이다(세 곳에 복제돼 있다).
         public TileKind TileAt(int x, int y) =>
-            x < 0 || y < 0 || x >= Width || y >= Height ? TileKind.Wall : _tiles[x, y];
+            y < 0 ? TileKind.Empty
+            : x < 0 || x >= Width || y >= Height ? TileKind.Wall
+            : _tiles[x, y];
 
         // 확률 칸을 확정하기 전의 원본 지형 사본.
         public TileKind[,] CopyTiles()

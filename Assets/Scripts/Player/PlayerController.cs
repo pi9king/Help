@@ -52,6 +52,9 @@ namespace Help.Player
         public ElementType EquippedElement { get; set; } = ElementType.None;
         // 현재 장착 무기 종류 (공격 모션 선택에 사용 — PlayerAttack)
         public WeaponCategory EquippedWeaponCategory { get; private set; } = WeaponCategory.None;
+
+        // 장착 무기의 공격 속도 배수(ItemDefinition.AttackSpeedMult). 공격 간격과 모션을 같이 줄인다.
+        public float AttackSpeedMult { get; private set; } = 1f;
         // 현재 장착 무기가 제공하는 능력(공격 시 Hitbox가 능력 타깃/장애물에 적용)
         private readonly List<Capability> _equippedCapabilities = new();
         public IReadOnlyList<Capability> EquippedCapabilities => _equippedCapabilities;
@@ -124,6 +127,7 @@ namespace Help.Player
             {
                 EquippedElement = item.Element;
                 EquippedWeaponCategory = item.WeaponCategory;
+                AttackSpeedMult = item.AttackSpeedMult;
                 _equippedCapabilities.Clear();
                 if (item.Capabilities != null) _equippedCapabilities.AddRange(item.Capabilities);
             }
@@ -141,6 +145,7 @@ namespace Help.Player
             {
                 EquippedElement = ElementType.None;
                 EquippedWeaponCategory = WeaponCategory.None;
+                AttackSpeedMult = 1f;
                 _equippedCapabilities.Clear();
             }
             else if (item.Type == ItemType.SubWeapon)
@@ -242,7 +247,7 @@ namespace Help.Player
         {
             if (!value.isPressed || _state == PlayerState.Attacking || UiBlocking) return;
             _state = PlayerState.Attacking;
-            _attackTimer = _attackDuration;
+            _attackTimer = Help.Combat.AttackSpeed.Scale(_attackDuration, AttackSpeedMult);
             AttackPerformed?.Invoke();
         }
 

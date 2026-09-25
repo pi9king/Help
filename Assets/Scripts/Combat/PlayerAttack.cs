@@ -63,7 +63,9 @@ namespace Help.Combat
         }
 
         // 추후: WeaponCategory→AttackMotionDef 라이브러리 조회. 지금은 기본 근접 모션.
-        private AttackMotionDef SelectMotion() => AttackMotionDef.Default();
+        // 공격 속도 배수는 공격 간격(PlayerController)과 같은 값으로 모션에도 적용한다.
+        private AttackMotionDef SelectMotion() =>
+            AttackMotionDef.Default().ScaledBy(_pc != null ? _pc.AttackSpeedMult : 1f);
 
         private void Update()
         {
