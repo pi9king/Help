@@ -25,6 +25,7 @@ namespace Help.Player
         private PlayerState _state;
         private HitFlash _flash;
         private SpriteRenderer _bodyRenderer;
+        private PlayerWeaponVisual _weaponVisual;
         private Vector2 _moveInput;
         private Vector2 _lookInput;
         private Vector2 _aimDirection = Vector2.down;
@@ -38,6 +39,8 @@ namespace Help.Player
 
         public ElementType EquippedElement { get; set; } = ElementType.None;
         public WeaponCategory EquippedWeaponCategory { get; private set; } = WeaponCategory.None;
+        public ItemDefinition EquippedWeapon { get; private set; }
+        public AttackMotionDef EquippedAttackMotion => AttackMotionDef.ForWeapon(EquippedWeapon);
 
         private readonly List<Capability> _equippedCapabilities = new();
         public IReadOnlyList<Capability> EquippedCapabilities => _equippedCapabilities;
@@ -76,6 +79,8 @@ namespace Help.Player
             if (_flash == null) _flash = gameObject.AddComponent<HitFlash>();
             _bodyRenderer = GetComponent<SpriteRenderer>() ?? GetComponentInChildren<SpriteRenderer>();
 
+            _weaponVisual = GetComponent<PlayerWeaponVisual>();
+            if (_weaponVisual == null) _weaponVisual = gameObject.AddComponent<PlayerWeaponVisual>();
             if (GetComponent<PlayerAttack>() == null)
                 gameObject.AddComponent<PlayerAttack>();
         }
@@ -102,6 +107,8 @@ namespace Help.Player
             {
                 EquippedElement = item.Element;
                 EquippedWeaponCategory = item.WeaponCategory;
+                EquippedWeapon = item;
+                _weaponVisual?.Equip(item);
                 _equippedCapabilities.Clear();
                 if (item.Capabilities != null) _equippedCapabilities.AddRange(item.Capabilities);
             }
@@ -119,6 +126,8 @@ namespace Help.Player
             {
                 EquippedElement = ElementType.None;
                 EquippedWeaponCategory = WeaponCategory.None;
+                EquippedWeapon = null;
+                _weaponVisual?.Equip(null);
                 _equippedCapabilities.Clear();
             }
             else if (item.Type == ItemType.SubWeapon)
@@ -188,7 +197,7 @@ namespace Help.Player
                 _state == PlayerState.Attacking || _state == PlayerState.Hurt ||
                 _state == PlayerState.Dead) return;
             _state = PlayerState.Attacking;
-            _attackTimer = _attackDuration;
+            _attackTimer = EquippedWeapon != null ? EquippedAttackMotion.TotalDuration : _attackDuration;
             AttackPerformed?.Invoke();
         }
 

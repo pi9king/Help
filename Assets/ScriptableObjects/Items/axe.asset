@@ -17,6 +17,7 @@ MonoBehaviour:
   Type: 1
   Element: 7
   WeaponCategory: 3
+  WorldSprite: {fileID: 21300000, guid: 8f7ddf8ca6aeb8c44aafc261e9d8891c, type: 3}
   Capabilities: 01000000
   Recipe:
   - Material: 0

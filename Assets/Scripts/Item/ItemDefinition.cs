@@ -12,6 +12,7 @@ namespace Help.Item
         public ItemType Type;
         public ElementType Element;
         public WeaponCategory WeaponCategory;
+        public Sprite WorldSprite; // 플레이어가 들고 있는 모습. 미지정이면 표시하지 않는다.
         public List<Capability> Capabilities = new(); // 이 아이템이 제공하는 능력(퍼즐/장애물 요구 판정용)
         public List<MaterialRequirement> Recipe = new();
 

@@ -97,6 +97,33 @@ namespace Help.Editor
                 Req((AlphabetMaterial.A,1),(AlphabetMaterial.X,1)),
                 attackBonus: 10, capabilities: new[] { Capability.BreakWall }));
 
+            list.Add(MakeWeapon("mace",   "MACE",   WeaponCategory.Mace,   ElementType.None,
+                Req((AlphabetMaterial.M,1),(AlphabetMaterial.A,1),(AlphabetMaterial.C,1)),
+                attackBonus: 10));
+
+            list.Add(MakeWeapon("pike", "PIKE", WeaponCategory.Pike, ElementType.None,
+                Req((AlphabetMaterial.P,1),(AlphabetMaterial.I,1),(AlphabetMaterial.K,1)), attackBonus: 10));
+            list.Add(MakeWeapon("cane", "CANE", WeaponCategory.Cane, ElementType.None,
+                Req((AlphabetMaterial.C,1),(AlphabetMaterial.A,1),(AlphabetMaterial.N,1)), attackBonus: 10));
+            list.Add(MakeWeapon("pipe", "PIPE", WeaponCategory.Pipe, ElementType.None,
+                Req((AlphabetMaterial.P,2),(AlphabetMaterial.I,1)), attackBonus: 10));
+            list.Add(MakeWeapon("net", "NET", WeaponCategory.Net, ElementType.None,
+                Req((AlphabetMaterial.N,1),(AlphabetMaterial.T,1)), attackBonus: 10));
+            list.Add(MakeWeapon("pen", "PEN", WeaponCategory.Pen, ElementType.None,
+                Req((AlphabetMaterial.P,1),(AlphabetMaterial.N,1)), attackBonus: 10));
+            list.Add(MakeWeapon("wire", "WIRE", WeaponCategory.Wire, ElementType.None,
+                Req((AlphabetMaterial.W,1),(AlphabetMaterial.I,1),(AlphabetMaterial.R,1)), attackBonus: 10));
+            list.Add(MakeWeapon("stone", "STONE", WeaponCategory.Stone, ElementType.None,
+                Req((AlphabetMaterial.S,1),(AlphabetMaterial.T,1),(AlphabetMaterial.O,1),(AlphabetMaterial.N,1)), attackBonus: 10));
+            list.Add(MakeWeapon("spade", "SPADE", WeaponCategory.Spade, ElementType.None,
+                Req((AlphabetMaterial.S,1),(AlphabetMaterial.P,1),(AlphabetMaterial.A,1),(AlphabetMaterial.D,1)), attackBonus: 10));
+
+            // E가 여러 개인 단어: 제작 규칙 결정 전까지 레시피 없이 테스트 씬에서만 장착한다.
+            list.Add(MakeWeapon("epee", "EPEE", WeaponCategory.Epee, ElementType.None, Req(), attackBonus: 10));
+            list.Add(MakeWeapon("needle", "NEEDLE", WeaponCategory.Needle, ElementType.None, Req(), attackBonus: 10));
+            list.Add(MakeWeapon("pestle", "PESTLE", WeaponCategory.Pestle, ElementType.None, Req(), attackBonus: 10));
+            list.Add(MakeWeapon("skewer", "SKEWER", WeaponCategory.Skewer, ElementType.None, Req(), attackBonus: 10));
+
             list.Add(MakeWeapon("knife",  "KNIFE",  WeaponCategory.Knife,  ElementType.Steel,
                 Req((AlphabetMaterial.K,1),(AlphabetMaterial.N,1),(AlphabetMaterial.I,1),(AlphabetMaterial.F,1)),
                 attackBonus: 5, attackSpeedMult: 1.4f));

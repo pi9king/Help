@@ -8,6 +8,19 @@ namespace Help.Item
         Axe,     // AXE   — 느리지만 넓은 범위
         Knife,   // KNIFE — 매우 빠름, 짧은 사거리
         Rapier,  // RAPIER — 빠른 찌르기
-        Saber    // SABER — 중간 속도, 중간 사거리
+        Saber,   // SABER — 중간 속도, 중간 사거리
+        Mace,    // MACE — 짧고 좁은 타격
+        Pike,
+        Cane,
+        Pipe,
+        Net,
+        Pen,
+        Wire,
+        Stone,
+        Spade,
+        Epee,
+        Needle,
+        Pestle,
+        Skewer
     }
 }

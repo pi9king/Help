@@ -1,0 +1,27 @@
+<svg width="200" height="448" viewBox="0 0 200 448" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g opacity="0.4">
+<g filter="url(#filter0_i_4_1200)">
+<rect x="92.2253" y="88" width="16" height="348" fill="#B06438"/>
+</g>
+<rect x="86.2253" y="82" width="28" height="360" stroke="#321F15" stroke-width="12" stroke-linejoin="round"/>
+<circle cx="100.379" cy="122.38" r="33.5715" transform="rotate(13.877 100.379 122.38)" fill="#A161C4" stroke="#321F15" stroke-width="12" stroke-linejoin="round"/>
+<circle cx="100.434" cy="63.5327" r="25.438" transform="rotate(13.877 100.434 63.5327)" fill="#D07BD3" stroke="#321F15" stroke-width="12" stroke-linejoin="round"/>
+<mask id="path-5-outside-1_4_1200" maskUnits="userSpaceOnUse" x="26" y="110" width="149" height="87" fill="black">
+<rect fill="white" x="26" y="110" width="149" height="87"/>
+<path d="M162.437 122.218C162.437 138.72 155.881 154.545 144.213 166.213C132.545 177.881 116.72 184.437 100.218 184.437C83.717 184.437 67.8915 177.881 56.2233 166.213C44.5551 154.545 38 138.72 38 122.218H56.1051C56.1051 133.918 60.7527 145.138 69.0256 153.411C77.2984 161.684 88.5187 166.331 100.218 166.331C111.918 166.331 123.138 161.684 131.411 153.411C139.684 145.138 144.331 133.918 144.331 122.218H162.437Z"/>
+</mask>
+<path d="M162.437 122.218C162.437 138.72 155.881 154.545 144.213 166.213C132.545 177.881 116.72 184.437 100.218 184.437C83.717 184.437 67.8915 177.881 56.2233 166.213C44.5551 154.545 38 138.72 38 122.218H56.1051C56.1051 133.918 60.7527 145.138 69.0256 153.411C77.2984 161.684 88.5187 166.331 100.218 166.331C111.918 166.331 123.138 161.684 131.411 153.411C139.684 145.138 144.331 133.918 144.331 122.218H162.437Z" fill="#D9D9D9"/>
+<path d="M162.437 122.218C162.437 138.72 155.881 154.545 144.213 166.213C132.545 177.881 116.72 184.437 100.218 184.437C83.717 184.437 67.8915 177.881 56.2233 166.213C44.5551 154.545 38 138.72 38 122.218H56.1051C56.1051 133.918 60.7527 145.138 69.0256 153.411C77.2984 161.684 88.5187 166.331 100.218 166.331C111.918 166.331 123.138 161.684 131.411 153.411C139.684 145.138 144.331 133.918 144.331 122.218H162.437Z" stroke="#321F15" stroke-width="24" stroke-linejoin="round" mask="url(#path-5-outside-1_4_1200)"/>
+</g>
+<defs>
+<filter id="filter0_i_4_1200" x="80.2253" y="76" width="40" height="372" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+<feFlood flood-opacity="0" result="BackgroundImageFix"/>
+<feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape"/>
+<feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+<feOffset dy="-61"/>
+<feComposite in2="hardAlpha" operator="arithmetic" k2="-1" k3="1"/>
+<feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.15 0"/>
+<feBlend mode="normal" in2="shape" result="effect1_innerShadow_4_1200"/>
+</filter>
+</defs>
+</svg>

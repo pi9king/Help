@@ -10,16 +10,19 @@ namespace Help.Combat
     public class PlayerAttack : MonoBehaviour
     {
         private PlayerController _pc;
+        private PlayerWeaponVisual _weaponVisual;
         private Hitbox _hitbox;
         private SlashVFX _slash;
 
         private AttackMotionClock _clock;
         private AttackMotionDef _current;
         private Vector2 _attackDirection = Vector2.down;
+        private float _attackElapsed;
 
         private void Awake()
         {
             _pc = GetComponent<PlayerController>();
+            _weaponVisual = GetComponent<PlayerWeaponVisual>();
             _hitbox = GetComponentInChildren<Hitbox>(true);
 
             _slash = GetComponentInChildren<SlashVFX>(true);
@@ -39,21 +42,27 @@ namespace Help.Combat
         private void OnDisable()
         {
             if (_pc != null) _pc.AttackPerformed -= OnAttackPerformed;
+            _hitbox?.SetActive(false);
+            _weaponVisual?.EndAttack();
         }
 
         private void OnAttackPerformed()
         {
+            if (_weaponVisual == null) _weaponVisual = GetComponent<PlayerWeaponVisual>();
             _current = SelectMotion();
             _attackDirection = AimGeometry.DirectionOrDefault(_pc.AimDirection);
+            _attackElapsed = 0f;
             _clock = new AttackMotionClock(_current.Windup, _current.Active, _current.Recovery);
             _clock.Start();
+            _weaponVisual?.BeginAttack(_attackDirection, _current);
 
             switch (_current.Kind)
             {
                 case AttackKind.MeleeArc:
-                    _slash?.Play(_attackDirection, _current.Reach, _current.ArcStartDeg, _current.ArcEndDeg,
-                                 _current.SlashColor, _current.SlashScale,
-                                 _current.Active + _current.Recovery);
+                    if (_pc.EquippedWeapon?.Id != "axe" || _pc.EquippedWeapon.WorldSprite == null)
+                        _slash?.Play(_attackDirection, _current.Reach, _current.ArcStartDeg, _current.ArcEndDeg,
+                                     _current.SlashColor, _current.SlashScale,
+                                     _current.TotalDuration);
                     break;
 
                 case AttackKind.Projectile:
@@ -64,13 +73,14 @@ namespace Help.Combat
             }
         }
 
-        // 추후: WeaponCategory→AttackMotionDef 라이브러리 조회. 지금은 기본 근접 모션.
-        private AttackMotionDef SelectMotion() => AttackMotionDef.Default();
+        private AttackMotionDef SelectMotion() => _pc.EquippedAttackMotion;
 
         private void Update()
         {
             if (_clock == null) return;
+            _attackElapsed += Time.deltaTime;
             var r = _clock.Tick(Time.deltaTime);
+            _weaponVisual?.SetAttackElapsed(_attackElapsed);
 
             if (_current.Kind == AttackKind.MeleeArc && _hitbox != null)
             {
@@ -88,6 +98,7 @@ namespace Help.Combat
             if (r.Phase == AttackPhase.Done)
             {
                 _hitbox?.SetActive(false);
+                _weaponVisual?.EndAttack();
                 _clock = null;
             }
         }
