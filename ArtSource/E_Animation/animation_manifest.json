@@ -1,0 +1,65 @@
+﻿{
+    "cell_size":  64,
+    "pivot":  "bottom-center (0.5, 0.0)",
+    "row_order":  [
+                      "Down",
+                      "Left",
+                      "Right",
+                      "Up"
+                  ],
+    "animations":  {
+                       "Idle":  {
+                                    "loop":  true,
+                                    "rows":  4,
+                                    "frames_per_direction":  4,
+                                    "fps":  7
+                                },
+                       "Walk":  {
+                                    "loop":  true,
+                                    "rows":  4,
+                                    "frames_per_direction":  6,
+                                    "fps":  11
+                                },
+                       "Attack":  {
+                                      "loop":  false,
+                                      "rows":  4,
+                                      "frames_per_direction":  6,
+                                      "fps":  12
+                                  },
+                       "Hit":  {
+                                   "loop":  false,
+                                   "rows":  4,
+                                   "frames_per_direction":  3,
+                                   "fps":  11
+                               },
+                       "Death":  {
+                                     "direction":  "Down/common",
+                                     "loop":  false,
+                                     "frames":  8,
+                                     "rows":  1,
+                                     "fps":  9
+                                 },
+                       "Skill":  {
+                                     "direction":  "Down/common",
+                                     "loop":  false,
+                                     "frames":  6,
+                                     "rows":  1,
+                                     "fps":  11
+                                 },
+                       "Equipment":  {
+                                         "direction":  "Down",
+                                         "frames":  7,
+                                         "rows":  1,
+                                         "fps":  0,
+                                         "order":  [
+                                                       "Unarmed",
+                                                       "Sword",
+                                                       "Shield",
+                                                       "Staff",
+                                                       "Spellbook",
+                                                       "Helmet",
+                                                       "Cape Variation"
+                                                   ]
+                                     }
+                   }
+}

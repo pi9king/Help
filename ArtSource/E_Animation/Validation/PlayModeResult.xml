@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<test-run id="2" testcasecount="1" result="Passed" total="1" passed="1" failed="0" inconclusive="0" skipped="0" asserts="0" engine-version="3.5.0.0" clr-version="4.0.30319.42000" start-time="2026-10-04 14:24:53Z" end-time="2026-10-04 14:24:54Z" duration="1.3167608">
+  <test-suite type="TestSuite" id="1011" name="help" fullname="help" runstate="Runnable" testcasecount="2" result="Passed" start-time="2026-10-04 14:24:53Z" end-time="2026-10-04 14:24:54Z" duration="1.316761" total="1" passed="1" failed="0" inconclusive="0" skipped="0" asserts="0">
+    <properties>
+      <property name="platform" value="PlayMode" />
+    </properties>
+    <test-suite type="Assembly" id="1005" name="Tests.PlayMode.dll" fullname="D:/Projects/help/_EAnimationBuild/Library/ScriptAssemblies/Tests.PlayMode.dll" runstate="Runnable" testcasecount="2" result="Passed" start-time="2026-10-04 14:24:53Z" end-time="2026-10-04 14:24:54Z" duration="1.305647" total="1" passed="1" failed="0" inconclusive="0" skipped="0" asserts="0">
+      <properties>
+        <property name="_PID" value="1709260" />
+        <property name="_APPDOMAIN" value="Unity Child Domain" />
+        <property name="platform" value="PlayMode" />
+        <property name="EditorOnly" value="False" />
+      </properties>
+      <test-suite type="TestSuite" id="1006" name="Tests" fullname="Tests" runstate="Runnable" testcasecount="2" result="Passed" start-time="2026-10-04 14:24:53Z" end-time="2026-10-04 14:24:54Z" duration="1.304077" total="1" passed="1" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <properties />
+        <test-suite type="TestSuite" id="1007" name="PlayMode" fullname="Tests.PlayMode" runstate="Runnable" testcasecount="2" result="Passed" start-time="2026-10-04 14:24:53Z" end-time="2026-10-04 14:24:54Z" duration="1.303025" total="1" passed="1" failed="0" inconclusive="0" skipped="0" asserts="0">
+          <properties />
+          <test-suite type="TestFixture" id="1001" name="EAnimationPreviewRuntimeTests" fullname="Tests.PlayMode.EAnimationPreviewRuntimeTests" classname="Tests.PlayMode.EAnimationPreviewRuntimeTests" runstate="Runnable" testcasecount="1" result="Passed" start-time="2026-10-04 14:24:53Z" end-time="2026-10-04 14:24:54Z" duration="1.300976" total="1" passed="1" failed="0" inconclusive="0" skipped="0" asserts="0">
+            <properties />
+            <test-case id="1002" name="PreviewScenePlaysDistinctLeftAndRightWalkFrames" fullname="Tests.PlayMode.EAnimationPreviewRuntimeTests.PreviewScenePlaysDistinctLeftAndRightWalkFrames" methodname="PreviewScenePlaysDistinctLeftAndRightWalkFrames" classname="Tests.PlayMode.EAnimationPreviewRuntimeTests" runstate="Runnable" seed="1953915116" result="Passed" start-time="2026-10-04 14:24:53Z" end-time="2026-10-04 14:24:54Z" duration="1.284713" asserts="0">
+              <properties>
+                <property name="_JOINTYPE" value="UnityCombinatorial" />
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+              <output><![CDATA[<b><color=#2EA3FF>MCP-FOR-UNITY</color></b>: [TestRunnerNoThrottle] Restored Interaction Mode after test run.
+Saving results to: C:/Users/UVC/AppData/LocalLow/DefaultCompany/help\TestResults.xml
+]]></output>
+            </test-case>
+          </test-suite>
+        </test-suite>
+      </test-suite>
+    </test-suite>
+  </test-suite>
+</test-run>
