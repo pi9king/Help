@@ -18,13 +18,24 @@ namespace Help.Player
         [SerializeField] private float _knockbackStun = 0.18f;
         [SerializeField] private float _stickAimDeadzone = 0.2f;
 
+        // 조준 분할 수. 1 = 360° 연속(기존 동작), 4 = 상하좌우, 8 = 대각선 포함.
+        // 4방향 스프라이트 시트와 조준각을 맞춰 보기 위한 비교용 값이다.
+        [SerializeField] private int _aimSteps = 1;
+
         public const float DefaultDashDuration = 0.15f;
+
+        public int AimSteps
+        {
+            get => _aimSteps;
+            set => _aimSteps = Mathf.Max(1, value);
+        }
 
         private Rigidbody2D _rb;
         private PlayerStats _stats;
         private PlayerState _state;
         private HitFlash _flash;
         private SpriteRenderer _bodyRenderer;
+        private bool _directionalBody;
         private PlayerWeaponVisual _weaponVisual;
         private Vector2 _moveInput;
         private Vector2 _lookInput;
@@ -78,6 +89,8 @@ namespace Help.Player
             _flash = GetComponentInChildren<HitFlash>();
             if (_flash == null) _flash = gameObject.AddComponent<HitFlash>();
             _bodyRenderer = GetComponent<SpriteRenderer>() ?? GetComponentInChildren<SpriteRenderer>();
+            // 4방향 시트는 Left/Right가 별도 그림이므로 flipX로 방향을 만들지 않는다.
+            _directionalBody = GetComponentInChildren<ECharacterAnimator>(true) != null;
 
             _weaponVisual = GetComponent<PlayerWeaponVisual>();
             if (_weaponVisual == null) _weaponVisual = gameObject.AddComponent<PlayerWeaponVisual>();
@@ -299,11 +312,12 @@ namespace Help.Player
                 candidate = _moveInput;
             }
 
-            if (candidate.sqrMagnitude > 0.0001f) _aimDirection = candidate.normalized;
+            if (candidate.sqrMagnitude > 0.0001f) _aimDirection = AimGeometry.Snap(candidate, _aimSteps);
         }
 
         private void UpdateVisualFacing()
         {
+            if (_directionalBody) return;
             if (_bodyRenderer == null || Mathf.Abs(_aimDirection.x) <= 0.001f) return;
             // 루트 Transform을 뒤집으면 자식 Hitbox의 2D 조준 방향까지 반전된다.
             // 시각만 flip하고 물리/공격 좌표계는 월드 방향을 유지한다.

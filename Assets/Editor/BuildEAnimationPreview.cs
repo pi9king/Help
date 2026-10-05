@@ -139,14 +139,14 @@ namespace Help.EditorTools
         {
             clip.frameRate = fps;
             clip.wrapMode = loop ? WrapMode.Loop : WrapMode.Once;
-            var keys = new ObjectReferenceKeyframe[columns + 1];
+            // 스프라이트 커브는 마지막 키 뒤로 한 프레임을 더 보여 준다. 루프 클립에 첫 프레임을 한 번 더
+            // 넣으면 경계에서 첫 프레임이 두 번 연속 나와 걸음이 멈칫한다. 루프가 아닐 때만 마지막
+            // 프레임 유지 키를 붙인다.
+            var keys = new ObjectReferenceKeyframe[loop ? columns : columns + 1];
             for (int frame = 0; frame < columns; frame++)
                 keys[frame] = new ObjectReferenceKeyframe { time = (float)frame / fps, value = sprites[row, frame] };
-            keys[columns] = new ObjectReferenceKeyframe
-            {
-                time = (float)columns / fps,
-                value = loop ? sprites[row, 0] : sprites[row, columns - 1]
-            };
+            if (!loop)
+                keys[columns] = new ObjectReferenceKeyframe { time = (float)columns / fps, value = sprites[row, columns - 1] };
             var binding = EditorCurveBinding.PPtrCurve("", typeof(SpriteRenderer), "m_Sprite");
             AnimationUtility.SetObjectReferenceCurve(clip, binding, keys);
             var settings = AnimationUtility.GetAnimationClipSettings(clip);
@@ -181,6 +181,13 @@ namespace Help.EditorTools
             renderer.sortingOrder = 10;
             actor.AddComponent<Animator>().runtimeAnimatorController = controller;
             actor.AddComponent<EAnimationPreview>();
+
+            // 애니메이션 관련 테스트는 이 씬에 모은다(사용자 결정 2026-10-05).
+            // 팔 리그는 EAnimationPreview가 시작할 때 ArmRigPreview로 직접 붙인다(버튼으로 조작).
+            // 그 텍스처 임포트 설정은 ArmRigTextureImport가 맞춘다. 설정이 생기기 전에 들어온 파일도 다시 읽힌다.
+            if (AssetDatabase.IsValidFolder("Assets/Resources/ArmRig"))
+                AssetDatabase.ImportAsset("Assets/Resources/ArmRig",
+                    ImportAssetOptions.ImportRecursive | ImportAssetOptions.ForceUpdate);
 
             EditorSceneManager.SaveScene(scene, ScenePath);
             if (!replaceUntitled)
