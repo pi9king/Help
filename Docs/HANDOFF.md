@@ -8,7 +8,8 @@
 
 # ★ 2026-10-06 현재 상태 — 캐릭터 스프라이트 · 팔 리그
 
-> 브랜치 `feat/quarter-view-pivot`. **2026-10-05~06 작업은 전부 미커밋이다**(HEAD = `a51be25`).
+> 브랜치 `feat/quarter-view-pivot`. 2026-10-05~06 작업은 커밋 5개로 정리했다(`c2636b0`~`8e27fa7`, 푸시 안 함).
+> 커밋 전 Unity Test Runner로 **EditMode 480/480 통과**, 컴파일 경고 0(이번 작업분).
 > 이 섹션은 **사용자 결정 / 모델이 한 일 / 미검증**을 구분해서 적는다.
 
 ## 한 줄 요약
@@ -54,12 +55,11 @@ E 캐릭터 스프라이트를 B 방향으로 정리하고(색·크기·찐빠·
 ## 테스트
 
 EditMode 새로 추가/수정: `AimSnapTests` `ECharacterFacingTests` `AttackLungeTests` `AttackFrameTimingTests`
-`ArmMotionTests` `ArmKeyMotionTests` `TwoBoneIkTests` — 전부 통과(**Unity 밖** Roslyn 컴파일 + 리플렉션 러너로 확인).
-⚠ Unity 에디터가 열려 있어 **Unity Test Runner로 EditMode 전체를 돌린 적이 없다.**
+`ArmMotionTests` `ArmKeyMotionTests` `TwoBoneIkTests`. 2026-10-06 Unity batchmode로 **EditMode 전체 480/480 통과**.
 
 ## 검증되지 않은 것
 
-- [ ] Unity Test Runner로 EditMode 전체 실행
+- [x] Unity Test Runner로 EditMode 전체 실행 (480/480, 2026-10-06)
 - [ ] 게임 씬(`QuarterViewPrototype`)에서 새 시트·걷기·공격 체감 — 미리보기 씬으로만 봤다
 - [ ] 팔 리그 최종 모션(마지막 수정: 휴식 = Idle 그림, Up 팔 몸 뒤) — 사용자 확인 전
 - [ ] 캐릭터 크기 — 시트 점유 약 1.6유닛 vs 플레이어 콜라이더 0.68유닛
