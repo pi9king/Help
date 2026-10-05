@@ -13,6 +13,7 @@ $grids = [ordered]@{
     Equipment = @(7, 1)
 }
 $total = 0
+$idleHead = @{}
 
 foreach ($name in $grids.Keys) {
     $grid = $grids[$name]
@@ -42,19 +43,32 @@ foreach ($name in $grids.Keys) {
                     if ($bottom -ne 60 -or $edgeCount -gt 0) {
                         throw "Misaligned or clipped: $name row=$row column=$column bottom=$bottom edge=$edgeCount"
                     }
-                    $sumX = 0
-                    $pixelCount = 0
-                    for ($y = $bottom - 6; $y -le $bottom; $y++) {
+                    # The body must sit where Idle puts it for the same direction, or
+                    # changing state jumps the E sideways. Measured on the E top bar:
+                    # a foot centroid picks up sword and cape tips near the ground.
+                    $top = -1
+                    for ($y = 0; $y -lt 64 -and $top -lt 0; $y++) {
+                        for ($x = 0; $x -lt 64; $x++) {
+                            if ($bitmap.GetPixel($column * 64 + $x, $row * 64 + $y).A -eq 255) { $top = $y; break }
+                        }
+                    }
+                    $minX = 64; $maxX = -1
+                    for ($y = $top; $y -lt $top + 6; $y++) {
                         for ($x = 0; $x -lt 64; $x++) {
                             if ($bitmap.GetPixel($column * 64 + $x, $row * 64 + $y).A -eq 255) {
-                                $sumX += $x
-                                $pixelCount++
+                                $minX = [Math]::Min($minX, $x); $maxX = [Math]::Max($maxX, $x)
                             }
                         }
                     }
-                    $footX = $sumX / $pixelCount
-                    if ([Math]::Abs($footX - 32) -gt 2) {
-                        throw "Horizontal foot drift: $name row=$row column=$column footX=$footX"
+                    $headX = ($minX + $maxX) / 2
+                    if ($name -eq 'Idle') {
+                        if ($column -eq 0) { $idleHead[$row] = $headX }
+                    }
+                    # Attack/Hit raise the sword above the head after frame 1.
+                    elseif ($name -eq 'Walk' -or $column -eq 0) {
+                        if ([Math]::Abs($headX - $idleHead[$row]) -gt 1.5) {
+                            throw "Body drift from Idle: $name row=$row column=$column headX=$headX idle=$($idleHead[$row])"
+                        }
                     }
                 }
                 $total++

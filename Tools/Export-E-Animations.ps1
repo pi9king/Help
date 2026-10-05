@@ -1,4 +1,10 @@
 $ErrorActionPreference = 'Stop'
+$bBuilder = Join-Path $PSScriptRoot 'build_e_character_b.py'
+if (Test-Path -LiteralPath $bBuilder) {
+    & python -B $bBuilder
+    if ($LASTEXITCODE -ne 0) { throw "Concept B sprite build failed: $LASTEXITCODE" }
+    return
+}
 Add-Type -Path (Join-Path $PSScriptRoot 'ECharacterSpriteExport.cs') -ReferencedAssemblies System.Drawing
 
 $project = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path

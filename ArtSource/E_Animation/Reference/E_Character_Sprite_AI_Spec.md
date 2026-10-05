@@ -1,5 +1,11 @@
 # E 캐릭터 AI 스프라이트 제작 명세서
 
+> **2026-10-05 방향 결정 — B 시안 채택.** 사용자는 A/B의 Idle·걷기·공격을 비교한 뒤
+> 움직임은 아직 다듬을 필요가 있지만 **방향 설계는 B가 맞다**고 결정했다.
+> 기준 이미지는 `ArtSource/E_Animation/Concepts/IdleFacing_B_fourDirections.png`이며,
+> Down은 정면 E 구조, 짧은 두 팔과 두 발의 정면 배치를 우선한다. 아래 규칙은 이 결정을 반영한다.
+> 이 결정은 조준을 360°로 유지할지 4방향으로 맞출지까지 정한 것은 아니다.
+
 ## 0. 목적
 이 문서는 탑뷰 2D 액션 로그라이크의 플레이어블 캐릭터인 **살아 움직이는 대문자 E**를 AI 이미지 생성으로 실제 게임용 스프라이트까지 제작하기 위한 기준 명세입니다.
 
@@ -19,7 +25,10 @@
 - E 안에 인간이나 생명체가 들어 있지 않습니다.
 - 별도의 머리나 얼굴이 존재하지 않습니다.
 - 망토, 무기, 장갑 등을 모두 제거해도 기본 형태는 **E + 작은 팔 + 작은 다리**여야 합니다.
-- 전체 실루엣의 약 **80~90%가 대문자 E**로 읽혀야 합니다.
+- Left/Right에서는 E의 세 가로획과 세로획이 실루엣으로 읽혀야 합니다.
+- **Down에서는 정면 방향성이 우선**입니다. E의 세 가로획과 세로획을 본체의 구조로 뚜렷하게
+  드러내되, 팔·발·망토를 정면에 맞게 배치하기 위해 외곽 실루엣의 E 비율을 고정하지 않습니다.
+  룬이나 갑옷에 단순히 E를 그려 넣은 인간형 몸통으로 바꾸지는 않습니다.
 - 32~64px 크기로 축소해도 즉시 E로 인식되어야 합니다.
 
 ---
@@ -112,6 +121,7 @@ AI 프롬프트에는 아래 문장을 강하게 유지합니다.
 - 정면에서 E의 세 가로획이 충분히 보여야 합니다.
 - 끝부분은 약간 찢어진 형태 허용
 - 망토 고정 위치는 모든 프레임에서 동일하게 유지
+- B 기준 Down에서는 좌우 고정 장식이 모두 보이고, Up에서는 망토가 본체 뒤를 덮는다.
 
 ---
 
@@ -152,6 +162,10 @@ AI 키워드:
 - 정면에 가장 가까운 방향
 - 기준 각도: **0°**
 - E의 정면 형태와 룬이 가장 잘 보임
+- **상단 획·중앙 획·하단 획이 정면 구조로 보인다.** 척추/룬이 한쪽 끝으로 밀려
+  측면 E처럼 읽히지 않아야 한다.
+- 팔·발 두 쌍은 본체의 무게 중심 아래에 놓고, 검은 캐릭터의 오른손
+  (화면 왼쪽)에 유지한다. 걷기와 공격 중에도 손이 바뀌지 않는다.
 
 ## Right
 - 완전한 90° 측면이 아님
@@ -171,6 +185,7 @@ AI 키워드:
 - 기준 각도: **180°**
 - 정면 룬은 거의 보이지 않음
 - 망토와 후면 구조가 중심
+- 두 발과 어깨의 후면 배치를 일치시키고, 검을 든 손의 화면상 위치를 프레임마다 유지한다.
 
 방향 요약:
 
@@ -199,6 +214,7 @@ Left와 Right를 단순 Mirror Flip 하지 않습니다.
 - E 입체 구조
 
 각 방향을 독립적으로 제작하되, 몸 비율과 회전각은 대칭적인 관계를 유지해야 합니다.
+B 시안의 Left/Right는 독립 시안이므로 이 규칙을 따른다.
 
 ---
 
@@ -236,6 +252,12 @@ no 3D-rendered appearance
 ---
 
 # 13. 기본 팔레트
+
+**현재 제작 기준:** 방향·포즈·프레임의 형태는 B 시안을 따른다. 색은
+`ArtSource/E_Animation/Archive/BeforeB/`에 보관한 A 시트의 재질별 색감을
+기준으로 한다. B 원본에서 바로 추출한 색을 최종 색으로 사용하지 않는다.
+`Tools/build_e_character_b.py`는 A Master 시트에서 32색 색상표를 추출해
+B 출력에 직접 적용하며 투명 영역과 프레임 위치는 그대로 유지한다.
 
 | 부위 | 권장 색 |
 |---|---|
@@ -311,6 +333,10 @@ E_Master_Up
 금지:
 - E 실루엣이 늘어나거나 찌그러짐
 - 프레임마다 본체 비율 변경
+- 프레임마다 갑옷 무늬·룬·망토 주름을 다시 그려 표면이 끓는 현상
+
+현재 B 이관 시트는 **방향별 기준 자세를 네 프레임에 반복**한다. 방향이 확정된 뒤
+본체를 재설계하지 않는 범위에서 룬 밝기와 망토 끝 움직임을 별도로 다듬는다.
 
 ---
 
@@ -335,6 +361,7 @@ Passing
 - E 본체가 고무처럼 휘면 안 됨
 - 망토는 이동 반대 방향으로 미세하게 흔들림
 - 팔은 다리와 반대 위상으로 움직임
+- 검은 같은 손에 고정하고, 몸통·팔·발이 항상 같은 방향으로 걷는다.
 
 ---
 
@@ -356,7 +383,8 @@ Passing
 핵심:
 - 4번 Impact가 가장 강한 포즈
 - 검 궤적은 가능하면 별도 이펙트 레이어
-- 본체는 약간의 체중 이동만 함
+- 본체·팔·발이 함께 준비→타격→복귀한다. Impact의 체중 이동이 검만 휘두르는 것보다
+  분명해야 한다.
 - E 형태 자체가 심하게 회전하거나 찌그러지지 않음
 
 ---
@@ -416,6 +444,7 @@ E 내부 고대 문자가 활성화되는 연출입니다.
 - 원형 룬 마법진
 
 스킬 중에도 E 본체 비율은 유지합니다.
+효과가 셀 상단에서 잘리지 않도록 높이를 제한합니다.
 
 ---
 
@@ -432,6 +461,7 @@ E 내부 고대 문자가 활성화되는 연출입니다.
 - Cape Variation
 
 장비가 변경되어도 기본 E 본체는 변경하지 않습니다.
+Spellbook은 실제 열린 책으로, Cape Variation은 길이·겹과 고정 장식으로 구분합니다.
 
 ---
 
@@ -553,13 +583,13 @@ Create production-ready pixel-art sprites based strictly on the attached E-chara
 
 The character is a living ancient capital letter E. The capital E itself is the complete body. There is no separate head, no face, no eyes, no mouth, no visor, and no human inside the character.
 
-Preserve a very clear capital-E silhouette at all times. Approximately 80–90% of the character silhouette must remain the letter E.
+Preserve the capital E as the actual structural stone body. In Down view, prioritize a clearly front-facing broad E structure with balanced short arms and feet; do not force the outer contour to be a side-facing E. Do not turn it into a human torso bearing a painted letter E.
 
 The body is made of ancient dark slate-blue stone and metal, reinforced with restrained aged-gold bronze trim. Small cracks and worn edges show its age. Thin cyan magical runes flow subtly through the vertical stroke of the E. The cyan elements are magical energy, never facial features.
 
 Two short armored arms extend directly from the E body. Two short sturdy legs extend directly from the bottom of the E. Keep the legs short and the feet relatively large for sprite readability.
 
-A worn dark-crimson cape is attached behind one side of the E and flows behind the body without covering the E silhouette.
+A worn dark-crimson cape attaches consistently behind the E. Both shoulder fasteners are visible in Down view, while the cape covers the back in Up view.
 
 Use a small fantasy sword in the right hand unless the frame is specifically unarmed.
 
@@ -572,6 +602,8 @@ Down = front-facing, 0 degrees.
 Right = approximately +80 degrees from front, NOT a full 90-degree profile and NOT a 45-degree diagonal view.
 Left = approximately -80 degrees from front, NOT a full 90-degree profile and NOT a 45-degree diagonal view.
 Up = rear-facing, 180 degrees.
+
+In Down view the vertical rune and all three horizontal E strokes are visible on the broad frontal structure. Both feet, both arms and the sword hand agree on the forward-facing perspective. During walk and attack, the sword never switches hands.
 
 Left and Right must still reveal a small portion of the front face of the E. They should look almost sideways, but approximately 10 degrees more front-facing than a pure side view.
 
@@ -603,6 +635,8 @@ Down / Left / Right / Up.
 E의 정면 면적이 아주 조금 남아 있어야 한다.
 
 4방향 캐릭터의 E 비율, 팔/다리 길이, 망토, 룬, 금장 위치, 색상은 완전히 동일하게 유지해.
+Down에서는 B 시안처럼 넓은 정면 E 구조와 대칭적인 짧은 팔·발을 우선해.
+측면 E 실루엣을 정면에 그대로 세우지 마.
 ```
 
 ---
