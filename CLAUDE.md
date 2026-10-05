@@ -84,6 +84,19 @@ MonoBehaviour 라이프사이클, 물리, 입력 등 Unity 런타임 기능을 �
 Assets/Tests/PlayMode/ — Assembly: Tests.PlayMode (asmdef 필요)
 ```
 
+### 시각 결과 확인 — 이미지가 아니라 테스트 씬 (사용자 결정 2026-10-05)
+
+애니메이션·리그·스프라이트 동작처럼 **눈으로 판단해야 하는 결과는 사용자가 Play로 직접 조작해 볼 수 있는
+테스트 씬으로 전달한다.** 비교 PNG 같은 정지 이미지로 확인을 요청하지 않는다(모델 자신의 검수용 렌더는 써도 된다).
+
+- **애니메이션 관련 테스트는 전부 `Assets/Scenes/EAnimationPreview.unity`에 모은다.** 새 테스트용 씬을 따로 만들지 않는다.
+- 씬은 `Tools ▸ E Character ▸ Build Animation Preview`(`Editor/BuildEAnimationPreview.cs`)가 다시 만든다.
+  새 테스트 하네스는 이 빌더의 `BuildScene`에 추가해야 씬을 재생성해도 남는다.
+- **기존 미리보기 구조에 편입하고, 화면 버튼으로 바로 확인할 수 있게 한다.** 별도 모드·별도 화면으로 띄우지 말고
+  기존 패널(방향·동작 버튼)에 버튼 줄을 추가한다. 키보드 단축키는 기존 키와 겹치지 않게 덧붙인다.
+  예: 팔 리그는 "ARM RIG" 버튼 줄(Slash·Thrust·Smash·Rig Idle·속도·무기·반복·조준)로 들어가고, 원래 캐릭터 자리에 나타난다.
+- 하네스는 임시 코드임을 주석에 적고, 기능이 확정되면 정식 컴포넌트로 옮긴 뒤 지운다.
+
 ## 아키텍처 패턴
 
 ### 상태 관리: enum + switch

@@ -2,7 +2,10 @@
 
 > 도트를 직접 찍지 않고 AI로 그래픽을 만드는 방법.
 > 어떤 생성 도구를 쓰든 같은 후처리를 탄다.
-> 최종 갱신: 2026-09-03
+> 최종 갱신: 2026-10-05
+>
+> **플레이어 캐릭터(E 골렘 기사)는 이 파이프라인을 타지 않는다.** 전용 명세서와 전용 추출
+> 스크립트를 쓴다 — 3-2-1절 참조. 아래 0~2절은 타일·적·아이콘·이펙트용이다.
 
 ## 0. 3단계로 끝난다
 
@@ -21,7 +24,7 @@
 **32픽셀 = 월드 1유닛 = 타일 한 칸.** 이 자만 고정하고 스프라이트의 픽셀 크기는 자유롭게 쓴다.
 
 - 타일 32×32 → 화면에서 1×1칸
-- 플레이어 32×48 → 1×1.5칸
+- 플레이어(E 골렘 기사) 64×64 → 2×2칸
 - 보스 96×96 → 3×3칸
 
 **보스를 나중에 더 크게 하고 싶으면 그때 128×160으로 다시 뽑으면 된다.**
@@ -36,7 +39,7 @@ name[@WxH][-o].png
 - `@WxH` — 목표 픽셀 크기. 생략하면 32×32
 - `-o` — 1픽셀 어두운 아웃라인을 두른다(캐릭터에 권장, 타일에는 쓰지 않는다)
 
-예: `player_E@32x48-o.png`, `tile_floor.png`, `boss@96x96-o.png`
+예: `grunt@32x48-o.png`, `tile_floor.png`, `boss@96x96-o.png`
 
 > 출력 파일명은 `@`와 `-o`를 뗀 이름이다. 기존 스프라이트를 갈아 끼우려면
 > `Assets/Sprites/`에 있는 것과 **같은 이름**으로 만들면 된다.
@@ -71,6 +74,10 @@ UI와 게임 화면의 색이 따로 놀지 않게.
 
 ### 3-1. 공통 스타일 문장 (모든 프롬프트 앞에 붙인다)
 
+> ⚠ **아래 문장과 3-2의 적·타일 프롬프트는 측면 플랫포머 시절에 쓴 것이다**(`side view, facing right`,
+> `side-scroller platformer ground`). 게임은 쿼터뷰로 전환됐고 플레이어는 이미 쿼터뷰로 다시 만들었지만,
+> 적·타일 프롬프트는 **아직 갱신하지 않았다.** 이것들을 쿼터뷰로 어떻게 고칠지는 정해진 바 없다.
+
 **범용 이미지 AI용 (ChatGPT / Gemini / Midjourney 등)**
 ```
 16-bit pixel art game sprite, side view, orthographic, facing right.
@@ -92,10 +99,10 @@ transparent background
 
 > **`{공통}` = 3-1의 문장.**
 
-#### 플레이어 — `player_E@32x48-o.png`
+#### 플레이어 — `Assets/Sprites/E_Character/*.png`
 
-**→ 아래 3-2-1절 참조.** 초기에 "몸통 자체가 글자 E"로 잡았다가 폐기했다
-(활자를 박아 놓은 것처럼 보였고, AI도 똑같이 그렸다). 확정 사양과 프롬프트는 3-2-1에 있다.
+**→ 3-2-1절 참조.** 이 절의 범용 프롬프트가 아니라 **전용 명세서**를 쓴다:
+`ArtSource/E_Animation/Reference/E_Character_Sprite_AI_Spec.md`.
 
 #### 타일 — `tile_floor.png`, `tile_wall.png`, `tile_platform.png`, `tile_spike.png`, `tile_pit.png`
 
@@ -142,109 +149,169 @@ A crescent slash effect, bright cyan energy arc, thick to thin taper,
 on magenta background, no character.
 ```
 
-### 3-2-1. 플레이어 캐릭터 — 확정 사양
+### 3-2-1. 플레이어 캐릭터 — E 골렘 기사 (쿼터뷰)
 
-여러 방향을 시도하고 되돌린 끝에 정해진 것. 되돌린 이유까지 남긴다 —
-모르면 같은 실수를 반복한다.
+> **단일 진실은 명세서다**: `ArtSource/E_Animation/Reference/E_Character_Sprite_AI_Spec.md` (사용자 작성).
+> 아래는 요약이며 충돌하면 **명세서가 이긴다**. `§`는 명세서의 절 번호다.
+> **2026-10-05 업데이트:** 사용자가 A/B 비교 후 B의 방향 설계를 선택했다.
+> 현재 8개 게임 시트는 B 기준이며, 생성 원본은 `ArtSource/E_Animation/Concepts/`다.
+>
+> 컨셉 레퍼런스(같은 폴더):
+> - `E 골렘 기사 픽셀 아트 스프라이트 시트.png` — 동작·장비·색 변형·스킬 이펙트 전체 컨셉
+> - `E베이스 8방향.png` — 방향별 회전 기준
 
-| 항목 | 확정 | 왜 |
-|---|---|---|
-| 정체성 | 알파벳 E, 단 **글자로 읽히지 않게** | 몸통을 E로 만들었더니 활자가 박힌 것처럼 보였다 |
-| E를 녹이는 법 | **가로 세 줄의 반복** | E의 본질은 글자가 아니라 '평행한 세 줄'이다 |
-| 금기 | 세 줄에 **세로 기둥을 붙이지 않는다** | 기둥이 붙는 순간 글자가 되고, 없으면 계급장 줄무늬로 읽힌다 |
-| 톤 | 다크나이트 — 어둡되 위압적 | 도적으로 만들었더니 주인공이 음침해졌다 |
-| 자세 | 꼿꼿이, 어깨 넓게, 대칭에 가깝게 | 웅크리고 굽은 자세가 '음침함'의 원인이었다 |
-| 얼굴 | **없음.** 투구 속 빛나는 가로 틈 셋 | 얼굴을 그리는 순간 마스코트가 된다 |
-| 무기 | **없음.** 두 손을 비운다 | 무기 교체가 이 게임의 핵심 루프다. 박아 넣으면 설계가 어긋난다 |
-| 초점 | 바이저가 화면에서 가장 밝다 | 플레이어는 얼굴을 본다. 금색 채도를 낮춰 자리를 내줬다 |
-| 규격 | 32×48, 측면, 오른쪽 향함 | |
+#### 정체성 — 양보 불가 3원칙 (§0)
 
-초안: `Tools/gen_player_knight.py` → `ArtSource/preview/knight_step*_x8.png`
-(0=기준 … 4=최종. 단계별로 무엇을 바꿨는지 비교할 수 있다)
+1. **E 자체가 몸이다.** 사람이나 로봇이 E 모양 갑옷을 입은 게 아니다.
+2. **머리와 얼굴이 없다.** 눈·입·바이저·얼굴 구멍·사람 머리용 헬멧이 존재하지 않는다.
+3. **모든 방향·애니메이션에서 같은 E 비율과 장비 구조를 유지한다.**
 
-#### 메인 프롬프트
+정체는 *의지를 얻어 움직이기 시작한 고대 문자 대문자 E*다. 좌우에서는 E 실루엣을,
+Down에서는 정면의 구조적 E와 팔·발의 방향 일치를 우선한다 (§1). 32~64px로 줄여도 E로 인식돼야 한다.
+망토·무기·장갑을 다 떼면 남는 것은
+**E + 짧은 팔 + 짧은 다리**다.
 
-```
-Pixel art game character sprite, 16-bit style, strict side profile facing
-right, full body, standing idle.
+#### 외형 (§2, §4~§7, §13)
 
-A dark knight hero — grim and imposing, but noble. Never creepy, never
-skulking. Stands upright and tall: chest out, head held high, broad angular
-pauldrons, torso tapering to the waist, feet planted firmly.
-
-NO FACE. The inside of the helm is total darkness, broken only by three
-narrow horizontal glowing cyan slits — and those slits are the brightest
-thing in the entire image. Everything else is subdued so the eye lands there.
-
-A heavy cape is clasped at ONE shoulder only. Its mass hangs behind and
-widens downward, with one corner swept out past the body into open air,
-breaking the outline asymmetrically. A thin crimson lining shows only where
-the cloth is turned back — at the shoulder and along that swept corner.
-
-Three short horizontal bronze bars sit on the chest like a rank insignia,
-with NO vertical stroke joining them. Three ridges band each gauntlet.
-
-BOTH HANDS ARE EMPTY — no weapon, no sword, no shield of any kind.
-
-Deep shadow but the form must always read — never a flat black blob.
-Dark navy plate armor, near-black cape, crimson lining, muted bronze,
-cyan visor glow.
-
-Hard pixel edges, flat colors, no anti-aliasing, no gradients, no dithering,
-dark outline around the silhouette. Solid pure magenta (#FF00FF) background,
-nothing else in frame.
-```
-
-#### 짧은 버전 (전용 픽셀아트 AI용)
-
-격자·팔레트를 도구가 잡아주므로 렌더 지시를 전부 뺀다. 20단어면 충분하다.
-
-```
-dark knight, side view facing right, no face, three glowing cyan slits in the
-helm, cape clasped at one shoulder, empty hands, dark navy armor with crimson
-cape lining, bronze chest bars
-```
-
-#### 네거티브 (SD 계열)
-
-```
-blurry, anti-aliased, smooth gradients, 3d render, realistic, photo, cute,
-chibi, mascot, cartoon eyes, face, mouth, weapon, sword, shield, text,
-watermark, white background, multiple characters, full scene
-```
-
-#### ★ 절대 규칙
-
-**프롬프트에 `letter`나 `E`를 쓰지 않는다.** 글자를 말하면 AI는 글자를 그린다.
-예외가 없었다. 세 줄은 `three`라는 단어만으로 나온다.
-
-#### 증상별 처방
-
-| 나온 것 | 고칠 줄 |
+| 부위 | 사양 |
 |---|---|
-| 얼굴을 그린다 | `NO FACE`를 문장 맨 앞으로 옮긴다 |
-| 귀엽다 / 마스코트 | `grim, serious, not cute` + 네거티브에 `chibi, mascot` |
-| 흐릿하다 | `hard pixel edges, no anti-aliasing, no blur` |
-| 웅크린다 | `standing upright, chest out, never crouching` |
-| 무기를 들려준다 | `BOTH HANDS EMPTY`를 대문자로 반복한다 |
-| 정면을 본다 | `strict side profile, orthographic` |
-| 배경이 남는다 | `flat solid magenta #FF00FF, nothing else in background` |
-| 캐릭터가 작다 | `full frame, character fills the canvas` |
-| 뻣뻣하다 | `weight on one leg, cape swept to one side` |
-| 색이 제멋대로 | `ArtSource/palette.png` 첨부 + `use only these colors` |
+| 본체 | 두꺼운 입체 대문자 E. 짙은 청회색 금속+석재. 균열·마모 허용하되 폐허 느낌 금지. 기계 로봇보다 **고대 마법 유물** |
+| 테두리 | 낡은 금색/황동 보강재. 화려한 왕실 장식 아님, 과한 장식 금지 |
+| 룬 | 세로 획 중심에 얇은 청록(Cyan/Turquoise) 마력 회로. **얼굴처럼 보이면 안 된다** — 두 점·눈 모양·바이저 금지 |
+| 팔 | E 본체에서 직접 나온다. 짧고 굵게. 인간형 어깨/몸통 구조 없음. 손은 큼직한 장갑 |
+| 다리 | E 하단 획 아래에서 직접 나온다. 사람처럼 긴 다리 금지. 발은 다리보다 크게 |
+| 망토 | 진홍/암적. 뒤로 흐르며 E를 가리지 않는다. **정면에서 세 가로획이 충분히 보여야 한다.** 고정 위치는 전 프레임 동일 |
+| 검 | 작은 판타지 검. 대검 금지. 본체 E보다 먼저 눈에 띄면 안 된다. 밝은 회백색 날 + 금색 손잡이. **오른손** |
+| 투구 | 사람 머리에 씌우는 것이 아니라 **E의 상단 획을 덮거나 감싸는 장비** (§4) |
 
-#### 깎는 방법
+가장 밝은 요소는 **검날 / 청록 룬 / 금속 하이라이트**로 제한한다.
+E의 상단 가로획은 머리가 아니라 그냥 **상단 획**이다 (§3).
 
-**한 번에 한 줄만 바꾼다.** 두 줄을 동시에 바꾸면 어느 쪽이 효과였는지 영영 모른다.
-긴 프롬프트가 더 좋은 것도 아니다 — 토큰이 늘수록 각 지시의 가중치가 흩어지고,
-앞쪽 토큰이 훨씬 세게 먹는다. 그래서 가장 중요한 지시를 앞에 둔다.
+#### 방향 — 가장 중요 (§8~§10)
 
-1. 메인 프롬프트로 4장 뽑는다
-2. 가장 안 맞는 것 **하나**를 고른다
-3. 그 항목의 처방 한 줄만 붙인다
-4. 다시 4장. 좋아졌으면 유지, 아니면 되돌린다
+게임은 **Top-down Quarter View**다. 완전한 사이드뷰도 완전한 정면뷰도 아니다.
 
-시드를 고정할 수 있는 도구면 고정하고 프롬프트만 바꾼다. 변수가 하나여야 판단이 선다.
+```text
+             UP
+            180°
+
+LEFT                     RIGHT
+-80°                     +80°
+
+             DOWN
+              0°
+```
+
+- **Down 0°** — 넓은 정면 E 구조와 중앙 룬, 짧은 팔·발의 정면 배치를 보인다.
+- **Right +80° / Left -80°** — 완전 측면(90°)이 **아니다**. 완전 측면보다 **10° 더 정면 쪽**을 보여주며
+  **E의 정면 면적이 조금 남아 있어야** 한다. 45° 대각선처럼 보이면 안 된다
+- **Up 180°** — 후면. 정면 룬은 거의 보이지 않고 망토와 후면 구조가 중심
+
+**§10 — 좌우 반전 금지.** Left와 Right를 단순 Mirror Flip 하지 않는다. 검을 든 손, 망토 고정 위치,
+룬 위치, 금장 위치, E 입체 구조가 달라지기 때문이다. 각 방향을 독립 제작하되 몸 비율과 회전각은
+대칭 관계를 유지한다.
+
+> 이전 A 시트의 Left 미러 교체는 `Docs/OPEN_QUESTIONS.md` #7에 기록돼 있다.
+> 현재 B 시트의 Left/Right는 별도 생성 원본에서 왔다.
+
+#### 규격 (§11, §24, §25)
+
+- 셀 **64×64 px**, 캐릭터 점유 높이 **48~56px**
+- 피벗 **bottom-center (0.5, 0)** — 두 발 사이 바닥 접점. 애니메이션 중 중심이 좌우로 튀면 안 된다
+- 생성 배경은 **solid #FF00FF**(환경·바닥·UI·텍스트·가이드라인 없음), 최종 단계에서 제거해 투명 PNG로
+- PPU는 프로젝트 공통 32 → 64px 셀 = 월드 2×2유닛
+
+#### 픽셀아트 스타일 (§12)
+
+현대적인 16-bit / 32-bit 판타지 픽셀아트.
+
+```text
+hard pixel edges / pixel-perfect silhouette / limited palette
+no anti-aliasing / no smooth vector edges / no painterly brush texture
+no realistic rendering / no 3D-rendered appearance
+```
+
+**컨셉아트보다 실제 스프라이트에서는 디테일을 줄인다.** 작은 균열·장식·금장을 다 표현하려 하지 말고,
+작은 크기에서도 읽히는 큰 형태를 우선한다.
+
+#### 애니메이션 (§15~§22)
+
+| 동작 | 방향 | 프레임 | FPS | 핵심 |
+|---|---:|---:|---:|---|
+| Idle | 4 | 4 | 6~8 | 현재 B는 방향별 기준 자세 1장을 4회 반복해 표면 떨림을 멈춘 상태. 미세 동작은 추가 검수 대상 |
+| Walk | 4 | 6 | 10~12 | Contact-Down-Passing ×2. 본체는 1~2px만. **E가 고무처럼 휘면 안 된다.** 팔은 다리와 반대 위상 |
+| Attack | 4 | 6 | 10~14 | Idle-Anticipation-Wind-up-**Impact**-Follow-through-Recovery. 검 궤적은 별도 이펙트 레이어 권장 |
+| Hit | 4 | 3 | 10~12 | Normal-Impact-Recovery. 1~2px 뒤로 밀림 + 작은 파편 + 짧은 밝은 플래시 |
+| Death | 공통/Down | 8 | 8~10 | 사람처럼 넘어지지 않는다. **고대 E 구조물의 붕괴** — 균열→기울어짐→조각 낙하→잔해→룬 소멸 |
+| Skill | 4 또는 공통 | 6~8 | 10~12 | E 내부 고대 문자 활성화(지면 룬·문자 회전·청록 마력 기둥·룬 마법진). 본체 비율 유지 |
+
+장비 변형 7종 (§22): **Unarmed / Sword / Shield / Staff / Spellbook / Helmet / Cape Variation**.
+장비가 바뀌어도 **기본 E 본체는 바뀌지 않는다.**
+
+#### 금지 사항 (§26)
+
+```text
+human head / human face / eyes / mouth / helmet-shaped head / visor / robot face
+cute mascot face / floating head / extra limbs / long human legs / oversized weapon
+rounded E silhouette / letter F / letter B / reversed E / warped E
+different body proportions between frames
+different armor design between frames
+different cape design between frames
+different rune placement between frames
+random accessories
+perspective changes between animation frames
+45-degree diagonal Left/Right view
+```
+
+#### 제작 순서 (§14, §29)
+
+**전체 애니메이션을 한 번에 생성하지 않는다.**
+
+1. **Master Direction Sheet 4장(Down/Left/Right/Up)만 먼저 만든다**
+2. 방향·비율 검수 — 특히 **Left/Right 각도를 먼저 검수**한다
+3. Idle → Walk → Attack → Hit → Death → Skill → 장비 변형
+4. 배경 제거 및 Unity용 시트 정리
+
+4방향이 확정되기 전에는 애니메이션 제작을 시작하지 않는다. Master 4장은 크기·E 비율·팔 길이·다리 길이·
+금장 위치·망토 디자인·룬 위치·색상 팔레트·검 디자인이 **전부 동일**해야 한다.
+
+#### 마스터 프롬프트
+
+전문은 명세서 **§27**에 있다. **컨셉 이미지와 함께** 제공한다. 새 세션에서의 첫 요청 문구는 §28에 있다.
+
+#### 현재 저장소 상태 (2026-10-05 관찰)
+
+`Assets/Sprites/E_Character/` — 투명 PNG 8장, 총 101셀. 전부 64×64, 피벗 하단 중앙.
+행 순서는 **Down, Left, Right, Up**이고 프레임은 왼쪽에서 오른쪽으로 진행한다.
+
+| 파일 | 그리드 | 내용 |
+|---|---|---|
+| `E_Master.png` | 4×1 | Down / Left / Right / Up |
+| `E_Idle.png` | 4×4 | 방향당 4 |
+| `E_Walk.png` | 6×4 | 방향당 6 |
+| `E_Attack.png` | 6×4 | 방향당 6 |
+| `E_Hit.png` | 3×4 | 방향당 3 |
+| `E_Death.png` | 8×1 | Down 공통 8 |
+| `E_Skill.png` | 6×1 | Down 공통 6 |
+| `E_Equipment.png` | 7×1 | 장비 변형 7 (정지) |
+
+`Assets/Editor/ECharacterSpriteImport.cs`가 임포트 시 셀 분할·하단 중앙 피벗·PPU 32·Point·무압축·
+밉맵 끔을 적용한다. `Assets/Animations/E_Character/`에 AnimationClip 18개와 `E_Character.controller`,
+미리보기 씬은 `Assets/Scenes/EAnimationPreview.unity`.
+
+현재 재생성기는 `Tools/build_e_character_b.py`다. 기존
+`Tools/Export-E-Animations.ps1`과 `Tools/Export-E-MasterSprites.ps1`도 이 생성기를 호출한다.
+정렬 검사는 `Tools/Test-E-SpriteAlignment.ps1`이다.
+
+> 생성된 B 프레임에도 세부 무늬와 걷기 리듬의 수동 검수는 남아 있다.
+> 과거 A 시트의 측정값은 `Docs/OPEN_QUESTIONS.md` #7에 보관했다.
+
+#### 폐기된 옛 컨셉
+
+2026-09-03까지는 **32×48 측면 플랫포머용 다크나이트**였다(얼굴 없음, 투구 속 청록 가로 틈 셋, 빈 손,
+한쪽 어깨 망토). 쿼터뷰 전환으로 **폐기**했다. `Assets/Sprites/player_E.png`가 그 시절 잔재로 아직
+옛 씬(TestScene·WeaponTestArena)에서 쓰인다. 시안 스프라이트(`player_E_draftA/B`·`knight`·`rogue`)와
+`Tools/gen_player_*.py`는 2026-10-06 정리에서 삭제했다.
 
 ### 3-3. 알파벳 재료는 AI로 만들지 마라
 
@@ -269,7 +336,7 @@ watermark, white background, multiple characters, full scene
 | 순서 | 에셋 | 크기 | 왜 이 순서인가 |
 |---|---|---|---|
 | 1 | 타일 5종 | 32×32 | 화면 면적의 대부분. 여기가 바뀌면 게임이 제일 달라 보인다 |
-| 2 | 플레이어 E | 32×48 | 계속 보고 있는 것. 이후 모든 에셋의 스타일 레퍼런스가 된다 |
+| 2 | 플레이어 E 골렘 기사 | 64×64 | 계속 보고 있는 것. 이후 모든 에셋의 스타일 레퍼런스가 된다 (1차 완료, 3-2-1 참조) |
 | 3 | 적 3종 + 보스 | 32×48 / 96×96 | 전투가 게임 시간의 대부분 |
 | 4 | 아이템 아이콘 9종 | 32×32 | 인벤토리/크래프팅 UI |
 | 5 | 문·포탈·이펙트 | 32×32 | 마무리 |
@@ -280,15 +347,19 @@ watermark, white background, multiple characters, full scene
 
 ## 5. 애니메이션
 
-현재 프로젝트에는 `Animator`/`AnimationClip` 에셋이 **하나도 없다.**
-피격 플래시·슬래시 이펙트 전부 코드로 처리한다(`HitFlash`, `SlashVFX`).
-그 방식을 유지한다 — 에셋이 늘어나지 않고 스프라이트 교체만으로 굴러간다.
+**플레이어는 AnimationClip을 쓴다.** `Assets/Animations/E_Character/`에 클립 18개와
+`E_Character.controller`가 있다 — Idle/Walk/Attack/Hit 각 4방향 + Death/Skill(Down 공통).
+Idle과 Walk만 반복한다. 프레임 수와 FPS는 3-2-1절 표와 `ArtSource/E_Animation/animation_manifest.json`.
 
-스프라이트 애니메이션이 필요해지면 `Sprite[]` + fps로 도는 경량 컴포넌트를 추가한다
-(Animator 에셋 불필요). 1차 범위는 Idle / Walk 각 4프레임까지.
-공격 모션은 기존 `SlashVFX`가 담당하므로 후순위.
+**Left와 Right는 별도 그림을 쓰고 `flipX`를 적용하지 않는다** — 명세서 §10(좌우 반전 금지) 때문이다.
+플레이어 루트 Transform도 반전하지 않는다(자식 히트박스 좌표 보존, `Docs/QUARTER_VIEW_MIGRATION.md`).
 
-> **현재 상태**: 스프라이트 애니메이션 미구현. 좌우 반전은 `transform.localScale.x` 부호로 처리 중.
+그 외 피격 플래시·슬래시 이펙트는 여전히 코드로 처리한다(`HitFlash`, `SlashVFX`).
+적·오브젝트는 아직 AnimationClip이 없고, 필요해지면 `Sprite[]` + fps 경량 컴포넌트로 간다
+(Animator 에셋 불필요).
+
+> **현재 상태**: 플레이어 애니메이션 구현됨(미리보기 씬 `Assets/Scenes/EAnimationPreview.unity`).
+> 적·오브젝트 스프라이트 애니메이션은 미구현.
 
 ---
 
@@ -304,3 +375,22 @@ watermark, white background, multiple characters, full scene
 | `Assets/Editor/PixelImport.cs` | PNG 저장 + 임포트 규격. 플레이스홀더 생성기와 공유 |
 | `Assets/Editor/SpriteGenerator.cs` | 코드로 그리는 플레이스홀더(메뉴 Help ▸ Setup ▸ Generate Placeholder Sprites) |
 | `Assets/Tests/EditMode/PixelArtOpsTests.cs` | 후처리 연산 검증 |
+
+### 플레이어 캐릭터 전용 (위 파이프라인과 별개)
+
+| 파일 | 역할 |
+|---|---|
+| `ArtSource/E_Animation/Reference/E_Character_Sprite_AI_Spec.md` | **캐릭터 사양의 단일 진실** (사용자 작성 명세서) |
+| `ArtSource/E_Animation/Reference/*.png` | 컨셉 시트 · 8방향 베이스 |
+| `ArtSource/E_Animation/Concepts/` | **현재 B 시트의 고해상도 원본** |
+| `ArtSource/E_Animation/animation_manifest.json` | 행 순서 · 프레임 수 · FPS |
+| `ArtSource/E_Animation/README.md` | 결과물 설명 · 미리보기 씬 조작법 · 검수 메모 |
+| `ArtSource/E_Master/64px/` | Master 4방향 파생 사본 |
+| `Tools/build_e_character_b.py` | B 원본 → 게임용 8개 PNG와 프레임·미리보기·마스터 파생본 재생성 |
+| `Tools/e_sprite_cleanup.py` · `Tools/e_color_transfer.py` | 컨셉 자르기·마젠타 제거 / 원본 색 복원 (생성기가 사용) |
+| `ArtSource/E_Animation/Archive/BeforeB/E_Master.png` | 색 복원의 기준(원본 A Master) |
+| `Tools/build_arm_rig_poc.py` · `Tools/arm_motion_defaults.py` | 팔 리그 에셋 / 키 자세 초안 (`Docs/ARM_RIG_PLAN.md`) |
+| `Tools/Export-E-Animations.ps1` | B 생성기 호출용 기존 명령 |
+| `Tools/Export-E-MasterSprites.ps1` | B 생성기 호출용 기존 명령 |
+| `Tools/Test-E-SpriteAlignment.ps1` | 출력 정렬(발 접점·셀 중심) 검사 |
+| `Assets/Editor/ECharacterSpriteImport.cs` | 64px 셀 분할 · 하단 중앙 피벗 · PPU 32 · Point · 무압축 |

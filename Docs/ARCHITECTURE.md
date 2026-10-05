@@ -60,12 +60,22 @@ Assets/Scripts/
 │   ├── PlayerState.cs        — enum (Idle/Running/Dashing/Attacking/Hurt/Dead)
 │   ├── TopDownMovement.cs    — 정규화된 8방향 이동·방향 대시 계산 순수 로직
 │   ├── PlayerStats.cs        — HP, 방어, 이동속도, 장비 보너스 적용/해제 등 순수 C# (OnHpChanged, OnDied 이벤트). 사망 후 TakeDamage/Heal 무효(부활 방지), Reset()으로만 부활(런 리셋)
-│   └── PlayerController.cs   — MonoBehaviour, XY 이동·방향 대시·포인터/스틱 조준·공격 타이머, AttackPerformed 이벤트.
-│                                Rigidbody2D 중력은 0이며 루트는 뒤집지 않고 SpriteRenderer만 좌우 반전한다.
+│   ├── PlayerController.cs   — MonoBehaviour, XY 이동·방향 대시·포인터/스틱 조준·공격 타이머, AttackPerformed 이벤트.
+│   │                            Rigidbody2D 중력은 0이며 루트는 뒤집지 않는다. 4방향 시트(ECharacterAnimator)가 있으면 flipX도 쓰지 않는다
+│   ├── ECharacterFacing.cs   — 순수: 조준 벡터 → 4방향 행, "{Action}_{Facing}" 상태 이름 (2026-10-05)
+│   ├── ECharacterAnimator.cs — E 시트를 PlayerController에 연결. 공격 프레임은 AttackFrameTiming으로 무기 단계에 맞추고,
+│   │                            전진(AttackLunge)은 시각 자식만 움직인다 (2026-10-05)
+│   ├── PlayerWeaponVisual.cs — 장착 무기 월드 스프라이트(AXE만 궤적 조정). 팔 리그가 게임에 붙으면 대체 예정
+│   └── AimModeTester.cs      — ⚠ 임시 하네스(조준 360°/4/8방향 비교, T키). 정리 보류 목록(HANDOFF)
 ├── Combat/
 │   ├── ElementType.cs        — enum 15종 (None + Fire/Ice/Steel/…/Spike)
 │   ├── DamageCalculator.cs   — static: 속성 불일치 시 10% 데미지(최소 1 보장 — 완전 면역 아님)
-│   ├── AimGeometry.cs        — 조준 벡터를 공격 판정 위치·회전으로 변환하는 순수 로직
+│   ├── AimGeometry.cs        — 조준 벡터를 공격 판정 위치·회전으로 변환하는 순수 로직. Snap(dir, steps)=n방향 스냅(조준 방식 교체 지점)
+│   ├── AttackFrameTiming.cs  — 순수: 공격 시트 6프레임을 예비·타격·회수 구간에 매핑 (2026-10-05)
+│   ├── AttackLunge.cs        — 순수: 공격 중 몸통 전진·복귀 곡선, 쿼터뷰 세로 축소(Displacement)
+│   ├── ArmMotion.cs          — 순수: 팔 리그 리듬(힘 모으기·순간 타격·오버슈트), 상체 쏠림, 12/24fps 끊기(StepTime). 화면 각도 모션은 비교용
+│   ├── ArmKeyMotion.cs       — 순수: 팔 리그 모션 = 방향별 화면 키 자세 4개(장전·힘 모으기·중간·끝) + 휴식 (2026-10-06)
+│   ├── TwoBoneIk.cs          — 순수: 2마디 IK(어깨-팔꿈치-손), flip으로 다른 해
 │   ├── Hitbox.cs             — 조준 방향 기반 공격 판정 콜라이더. 활성 창/배치는 PlayerAttack이 구동
 │   ├── AttackMotionClock.cs — 순수: 공격 타이밍(Windup→Active→Recovery→Done)+Active 진행도. 근접/원거리/마법 공용. EditMode 테스트
 │   ├── AttackKind.cs        — enum: MeleeArc(구현)/Projectile(원거리·마법, 추후)
@@ -145,14 +155,28 @@ Assets/Scripts/
     ├── CraftingUI.cs         — 레시피 목록, 제작 가능 여부 표시 (판정도 GetRawMaterials로 실제 Craft와 일치)
     └── RecipeDatabaseBridge.cs — 씬에서 RecipeDatabase SO를 CraftingUI에 노출
 
+Assets/Scripts/Animation/
+├── EAnimationPreview.cs       — 미리보기 씬 뷰어(방향·동작 버튼 + ARM RIG 버튼 줄 + 키 조정 패널). 애니메이션 테스트는 전부 여기
+└── ArmRigPreview.cs           — ⚠ 임시: 팔 리그 미리보기(4방향, 키 자세 로드·저장). 리그 확정 후 ECharacterRig로 이전
+
 Assets/Editor/
+├── BuildEAnimationPreview.cs  — 메뉴: Tools/E Character/Build Animation Preview(클립 18개·컨트롤러·미리보기 씬 생성)
+├── ECharacterSpriteImport.cs  — E_Character 시트 임포트 규격(64px 셀·하단 중앙 피벗·PPU32·Point·무압축)
+├── ArmRigTextureImport.cs     — Resources/ArmRig 텍스처 임포트 규격(점 필터·무압축)
+├── AimTestSetup.cs            — ⚠ 임시: 조준 비교 하네스 연결/해제 메뉴
 ├── SetupGameAssets.cs         — 메뉴: Create All Game Assets(재료·무기·KEY+RecipeDatabase) / Assign RecipeDatabase / Switch To Slot Crafting UI / Switch To Grid Inventory UI
 ├── RoomContentSetup.cs        — 메뉴: Setup Data-Driven Room Content(콘텐츠 프리팹 Combat/Puzzle/Tutorial + RoomContentLibrary + RoomManager 연결 + 시작 시딩 끔). Room_Tutorial=K·Y 줍기 + 잠긴 문(Unlock)+RoomPuzzle
 ├── PrefabSetup.cs             — 빌딩블록 프리팹(Enemy/BreakableWall/IceWall/RoomPuzzle) 생성 메뉴
 └── SpriteGenerator.cs         — 메뉴: Help/Setup/Generate Placeholder Sprites. 프로시저럴 픽셀아트 PNG 생성(32px,PPU32,Point) → Assets/Sprites/*.png 임포트 + 타일/씬 SpriteRenderer 할당
 
 Assets/Sprites/                — 실제 PNG 스프라이트 에셋(임시 내장 사각형 대체)
-├── player_E.png              — 플레이어 = 하늘색 알파벳 E (테마)
+├── E_Character/              — ★플레이어 "E 골렘 기사" 쿼터뷰 시트 8장(64px 셀, 총 101셀)
+│   └── E_Master/Idle/Walk/Attack/Hit/Death/Skill/Equipment.png
+│      사양: ArtSource/E_Animation/Reference/E_Character_Sprite_AI_Spec.md (단일 진실)
+│      현재 B 방향 시트(2026-10-05). 요약·현황: Docs/ART_PIPELINE.md 3-2-1
+│      조준: 몸통 4방향 + 팔·무기 360°(잠정) — Docs/OPEN_QUESTIONS.md #8, Docs/ARM_RIG_PLAN.md
+│      생성기: Tools/build_e_character_b.py (Walk는 Idle에서 합성). 작업 기록: Docs/E_SPRITE_WORKLOG.md
+├── player_E.png              — (폐기) 측면 시절 플레이어. 옛 씬(TestScene·WeaponTestArena)이 아직 참조
 ├── enemy_blob.png            — 적(빨간 크리처)
 ├── tile_floor.png / tile_wall.png — 방 셸 타일(잔디+흙 / 벽돌)
 └── tile_door_open.png / tile_door_locked.png — 문 상태 타일(녹색 아치 / 빨강+자물쇠)
@@ -193,6 +217,25 @@ Assets/Tests/
 
 EditMode 테스트 총 145개. (RoomContentLibrary.SelectIndex 3 추가) (전투 AI/스탯/드롭 32개 + 사망·런 리셋 + 퍼즐 프레임워크 13개[CapabilityMatch 5·SolveTracker 5·EntryRequirementChecker 능력 3]) **2026-07-11~12: MCP로 실제 실행 검증(141/141 통과) + Play 실측(전투 6항목 + 퍼즐: 크래프팅→장착→EquippedCapabilities→CapabilityTarget 해제·Hitbox 공격 적용·문잠금).**
 ```
+
+## 캐릭터 애니메이션 · 팔 리그 (2026-10-06)
+
+```
+[게임]  PlayerController ──AttackPerformed──▶ ECharacterAnimator ──▶ Animator(E_Character.controller, 4방향 클립)
+                                                │  AttackFrameTiming: 무기 Windup/Active/Recovery → 시트 프레임
+                                                └  AttackLunge: 시각 자식(E Body)만 전진·복귀
+
+[미리보기 전용 — 아직 게임에 미연결]
+EAnimationPreview (ARM RIG 버튼 줄) ──▶ ArmRigPreview
+    ├ Resources/ArmRig/rig.json          방향별 어깨 위치·앞뒤, 팔 조각 피벗 (Tools/build_arm_rig_poc.py)
+    ├ Resources/ArmRig/arm_motions.json  방향별 키 자세 (초안 Tools/arm_motion_defaults.py, 이후 Edit keys 패널이 저장)
+    ├ ArmKeyMotion.Evaluate → 손 위치(어깨 기준 화면 px)·무기 화면 각도·앞뒤·어깨 이동·팔꿈치 방향
+    ├ TwoBoneIk.Solve → 어깨·팔꿈치 회전 (조각을 자른 그대로가 회전 0 = 원본 Idle 그림)
+    └ ArmMotion: 상체 쏠림·12/24fps 끊기 / SlashVFX: 키의 무기 각도로 호를 그림
+```
+
+- 몸통은 4방향 시트 그대로, 팔·무기만 실시간 회전한다(사용자 결정). 무기 그림은 화면 기준 각도라 팔이 접혀도 뒤집히지 않는다.
+- 다음 단계: 리그를 정식 컴포넌트(`ECharacterRig`)로 옮겨 게임에 붙이고 `PlayerWeaponVisual`·`PlayerArms`를 대체한다(`Docs/ARM_RIG_PLAN.md`).
 
 ## TestScene 구성 (Assets/Scenes/TestScene/TestScene.unity)
 

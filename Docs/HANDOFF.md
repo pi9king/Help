@@ -1,11 +1,86 @@
 # 인수인계 문서 (HANDOFF) — 2026-07-13
 
-> **여기서 시작.** 프로젝트의 현재 상태·구조·실행법·확장법·남은 일을 한 곳에 정리한다.
-> 상세는 각 문서 참조: `DESIGN.md`(게임 규칙)·`ARCHITECTURE.md`(시스템 구조)·`HOWTO_ADD_CONTENT.md`(콘텐츠 추가법)·`SPEC_PUZZLE_FRAMEWORK.md`(퍼즐 명세+테스트).
+> **여기서 시작.** 맨 위 "2026-10-06 현재 상태"가 최신이다. 그 아래는 시간 역순의 과거 기록이다.
+> 상세 문서: `DESIGN.md`(게임 규칙·결정 로그) · `ARCHITECTURE.md`(시스템 구조) · `OPEN_QUESTIONS.md`(미결) ·
+> `ARM_RIG_PLAN.md`(팔·무기 분리) · `E_SPRITE_WORKLOG.md`(캐릭터 스프라이트 작업 기록) · `WEAPON_ROSTER.md`(무기).
 
 ---
 
-# ★ 2026-09-09 현재 상태 — 새 세션은 여기부터
+# ★ 2026-10-06 현재 상태 — 캐릭터 스프라이트 · 팔 리그
+
+> 브랜치 `feat/quarter-view-pivot`. **2026-10-05~06 작업은 전부 미커밋이다**(HEAD = `a51be25`).
+> 이 섹션은 **사용자 결정 / 모델이 한 일 / 미검증**을 구분해서 적는다.
+
+## 한 줄 요약
+
+E 캐릭터 스프라이트를 B 방향으로 정리하고(색·크기·찐빠·걷기), 무기군 구현을 위해 **팔·무기를 캐릭터에서 분리한
+리그**를 만들어 미리보기 씬에서 기본 모션(베기·찌르기·내려찍기)을 4방향으로 확인할 수 있게 했다.
+리그는 아직 게임(`QuarterViewPrototype`)에 연결되지 않았다.
+
+## 사용자가 결정한 것 (이번 기간)
+
+- 캐릭터 방향 설계는 **B**. 색은 **원본(A)으로 복원**.
+- 64px 셀 유지 + **모든 동작의 몸 크기 통일**(넓은 망토·검 끝은 셀 가장자리에서 잘림 감수). 몸 비율 기준은 **Idle**.
+- E **아랫막대를 윗막대 길이로** 늘린다(정면).
+- **팔·무기 분리**: 양팔, 두 마디, 실시간 회전. 조준은 몸통 4방향 + 팔·무기 360°(**잠정, 언제든 바꿀 수 있게**).
+  Death·Skill은 기존 시트 재생 + 무기만 지움(미구현).
+- **무기는 하나씩 구현하고, 무기마다 사용자와 따로 이야기해서 정한다.**
+- 모션 방식: 몸 기준 3D 투영 방식을 버리고 **방향별 화면 키 자세 + 조정 패널**("바꿔보자").
+- Up에서는 팔을 **몸 뒤**에 그린다(카메라가 뒤). 망토가 흩날리며 팔이 보이는 연출은 **보류**.
+- 시각 결과는 **이미지가 아니라 테스트 씬**으로, 애니메이션 테스트는 **EAnimationPreview 씬의 기존 패널에 버튼으로** 넣는다
+  (`CLAUDE.md` "시각 결과 확인").
+- 정리: 전수조사 A항목(쓰레기 파일)만 삭제. B(죽은 코드)·C(판단 필요)는 보류.
+
+## 지금 있는 것
+
+**스프라이트** — `Assets/Sprites/E_Character/` 8장 (101셀). 생성기 `python -B Tools/build_e_character_b.py`.
+- 컨셉 원본 7장을 연결 성분 단위로 잘라 이웃 포즈 조각·마젠타 테두리를 없앤다(`Tools/e_sprite_cleanup.py`).
+- 색은 재질별 히스토그램 매칭으로 원본 A Master 색을 옮긴다(`Tools/e_color_transfer.py`).
+- 모든 동작의 몸 크기·위치·비율을 Idle에 맞춘다. Attack Down 부츠는 Idle 폭에 맞춘다.
+- Walk 4방향은 Idle에서 합성한다(정면·뒤 = 부츠 걸음 + 1px 오르내림, 옆 = 두 다리가 진자처럼 앞뒤로).
+- 검사: `Tools/Test-E-SpriteAlignment.ps1` (101/101, 몸통이 Idle과 같은 위치인지 확인).
+
+**애니메이션 재생** — `Player/ECharacterAnimator` + `ECharacterFacing`(조준 → 4방향 행).
+공격 프레임은 무기의 예비·타격·회수 구간에 맞춰 고른다(`Combat/AttackFrameTiming`). 공격 전진은 세로를 줄인다(`AttackLunge.Displacement`).
+걷기 루프의 첫 프레임 중복 버그를 고쳤다(`BuildEAnimationPreview.SetFrames`).
+
+**팔 리그 (미리보기 전용)** — `Docs/ARM_RIG_PLAN.md`
+- 에셋 `Assets/Resources/ArmRig/`: 4방향 팔 없는 상체·다리, 팔 조각(윗팔·아랫팔·보호대), 시험용 무기 3종, `rig.json`, `arm_motions.json`.
+  만드는 도구 `Tools/build_arm_rig_poc.py`, 키 자세 초안 `Tools/arm_motion_defaults.py`(다시 돌리면 패널에서 고친 값을 덮어씀).
+- 로직: `Combat/ArmKeyMotion`(방향별 키 자세 4개 + 휴식), `Combat/TwoBoneIk`, `Combat/ArmMotion`(리듬·상체 쏠림·12/24fps 끊기 — 화면 각도 모션은 비교용).
+- 미리보기: `Animation/ArmRigPreview` ← `EAnimationPreview`의 **ARM RIG** 버튼 줄. Edit keys 패널로 손 위치·무기 각도·어깨 이동·팔꿈치 방향·앞뒤를 고치고 Save.
+- 휴식 자세는 원본 Idle 그림과 같다(IK 회전 0). 반대 팔은 휴식 자세 고정(손 개선 때 다시).
+
+## 테스트
+
+EditMode 새로 추가/수정: `AimSnapTests` `ECharacterFacingTests` `AttackLungeTests` `AttackFrameTimingTests`
+`ArmMotionTests` `ArmKeyMotionTests` `TwoBoneIkTests` — 전부 통과(**Unity 밖** Roslyn 컴파일 + 리플렉션 러너로 확인).
+⚠ Unity 에디터가 열려 있어 **Unity Test Runner로 EditMode 전체를 돌린 적이 없다.**
+
+## 검증되지 않은 것
+
+- [ ] Unity Test Runner로 EditMode 전체 실행
+- [ ] 게임 씬(`QuarterViewPrototype`)에서 새 시트·걷기·공격 체감 — 미리보기 씬으로만 봤다
+- [ ] 팔 리그 최종 모션(마지막 수정: 휴식 = Idle 그림, Up 팔 몸 뒤) — 사용자 확인 전
+- [ ] 캐릭터 크기 — 시트 점유 약 1.6유닛 vs 플레이어 콜라이더 0.68유닛
+
+## 다음 할 일 (사용자가 정한 순서 기준)
+
+1. **무기 하나씩 구현** — 무기마다 동작 종류·팔 동작·그림·속도를 사용자와 정한 뒤 구현(`ARM_RIG_PLAN.md` "무기 구현 방식").
+   그 전에 리그를 게임에 붙이는 작업(`ECharacterRig`, `PlayerWeaponVisual`·`PlayerArms` 대체)이 필요하다.
+2. 정리 보류분 — 전수조사 **B**(죽은 코드: `PlayerArms`·`WeaponArmMotion`, `EnemyLoot`, `RecipeAvailability`, 조준 비교 하네스,
+   `Export-E-*.ps1`의 옛 경로)와 **C**(Layer Lab·무기 아이콘 팩의 미사용분, TestScene·`QuarterViewMigration`, 역사 문서, 리그 비교 토글).
+3. 보류: 망토 애니메이션, 무기 안 든 손, Death·Skill에서 무기 지우기.
+
+## ⚠ 주의
+
+- 생성기는 순서가 있다: `build_e_character_b.py` → `build_arm_rig_poc.py`. 앞의 것만 돌리면 리그 몸통이 옛 시트 기준이 된다.
+- `ProjectSettings.asset`의 새 씬 템플릿 기본값이 지운 `SampleScene.unity`를 가리킨다(무해, 새 씬 생성 시 경고 가능).
+- `Assets/Resources/ArmRig/`의 텍스처 임포트 설정은 `Editor/ArmRigTextureImport`가 자동으로 맞춘다.
+
+---
+
+# 2026-09-09 상태 (과거 기록)
 
 ## 지금 어디까지 와 있나 (사실)
 
