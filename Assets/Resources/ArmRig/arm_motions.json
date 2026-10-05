@@ -1,0 +1,798 @@
+{
+  "rests": [
+    {
+      "direction": "Down",
+      "hand": [
+        3,
+        -20
+      ],
+      "weapon": 51,
+      "front": true
+    },
+    {
+      "direction": "Left",
+      "hand": [
+        3,
+        -20
+      ],
+      "weapon": 143,
+      "front": true
+    },
+    {
+      "direction": "Right",
+      "hand": [
+        3,
+        -20
+      ],
+      "weapon": 37,
+      "front": true
+    },
+    {
+      "direction": "Up",
+      "hand": [
+        3,
+        -20
+      ],
+      "weapon": 40,
+      "front": false
+    }
+  ],
+  "tracks": [
+    {
+      "motion": "Slash",
+      "direction": "Down",
+      "curve": "Smooth",
+      "keys": [
+        {
+          "name": "Loaded",
+          "hand": [
+            13,
+            -7
+          ],
+          "weapon": 20,
+          "front": true,
+          "shoulder": [
+            0,
+            0
+          ],
+          "elbowFlip": false
+        },
+        {
+          "name": "Cocked",
+          "hand": [
+            14,
+            -5
+          ],
+          "weapon": 35,
+          "front": true,
+          "shoulder": [
+            0,
+            0
+          ],
+          "elbowFlip": false
+        },
+        {
+          "name": "Mid",
+          "hand": [
+            0,
+            -17
+          ],
+          "weapon": -90,
+          "front": true,
+          "shoulder": [
+            0,
+            0
+          ],
+          "elbowFlip": false
+        },
+        {
+          "name": "Through",
+          "hand": [
+            -16,
+            -11
+          ],
+          "weapon": -165,
+          "front": true,
+          "shoulder": [
+            0,
+            0
+          ],
+          "elbowFlip": false
+        }
+      ]
+    },
+    {
+      "motion": "Thrust",
+      "direction": "Down",
+      "curve": "Snap",
+      "keys": [
+        {
+          "name": "Loaded",
+          "hand": [
+            8,
+            -8
+          ],
+          "weapon": -90,
+          "front": true,
+          "shoulder": [
+            1,
+            2
+          ],
+          "elbowFlip": true
+        },
+        {
+          "name": "Cocked",
+          "hand": [
+            9,
+            -6
+          ],
+          "weapon": -90,
+          "front": true,
+          "shoulder": [
+            1,
+            3
+          ],
+          "elbowFlip": true
+        },
+        {
+          "name": "Mid",
+          "hand": [
+            3,
+            -15
+          ],
+          "weapon": -90,
+          "front": true,
+          "shoulder": [
+            0,
+            -1
+          ],
+          "elbowFlip": true
+        },
+        {
+          "name": "Through",
+          "hand": [
+            1,
+            -21
+          ],
+          "weapon": -90,
+          "front": true,
+          "shoulder": [
+            -1,
+            -4
+          ],
+          "elbowFlip": true
+        }
+      ]
+    },
+    {
+      "motion": "Smash",
+      "direction": "Down",
+      "curve": "Accelerate",
+      "keys": [
+        {
+          "name": "Loaded",
+          "hand": [
+            5,
+            11
+          ],
+          "weapon": 100,
+          "front": true,
+          "shoulder": [
+            0,
+            0
+          ],
+          "elbowFlip": false
+        },
+        {
+          "name": "Cocked",
+          "hand": [
+            3,
+            13
+          ],
+          "weapon": 115,
+          "front": true,
+          "shoulder": [
+            0,
+            0
+          ],
+          "elbowFlip": false
+        },
+        {
+          "name": "Mid",
+          "hand": [
+            13,
+            -1
+          ],
+          "weapon": 10,
+          "front": true,
+          "shoulder": [
+            0,
+            0
+          ],
+          "elbowFlip": false
+        },
+        {
+          "name": "Through",
+          "hand": [
+            5,
+            -18
+          ],
+          "weapon": -95,
+          "front": true,
+          "shoulder": [
+            0,
+            0
+          ],
+          "elbowFlip": false
+        }
+      ]
+    },
+    {
+      "motion": "Slash",
+      "direction": "Right",
+      "curve": "Smooth",
+      "keys": [
+        {
+          "name": "Loaded",
+          "hand": [
+            -6,
+            7
+          ],
+          "weapon": 150,
+          "front": true,
+          "shoulder": [
+            0,
+            0
+          ],
+          "elbowFlip": false
+        },
+        {
+          "name": "Cocked",
+          "hand": [
+            -8,
+            8
+          ],
+          "weapon": 160,
+          "front": true,
+          "shoulder": [
+            0,
+            0
+          ],
+          "elbowFlip": false
+        },
+        {
+          "name": "Mid",
+          "hand": [
+            15,
+            -6
+          ],
+          "weapon": 5,
+          "front": true,
+          "shoulder": [
+            0,
+            0
+          ],
+          "elbowFlip": false
+        },
+        {
+          "name": "Through",
+          "hand": [
+            11,
+            -12
+          ],
+          "weapon": -40,
+          "front": true,
+          "shoulder": [
+            0,
+            0
+          ],
+          "elbowFlip": false
+        }
+      ]
+    },
+    {
+      "motion": "Thrust",
+      "direction": "Right",
+      "curve": "Snap",
+      "keys": [
+        {
+          "name": "Loaded",
+          "hand": [
+            -4,
+            -9
+          ],
+          "weapon": 0,
+          "front": true,
+          "shoulder": [
+            0,
+            0
+          ],
+          "elbowFlip": false
+        },
+        {
+          "name": "Cocked",
+          "hand": [
+            -7,
+            -9
+          ],
+          "weapon": 0,
+          "front": true,
+          "shoulder": [
+            0,
+            0
+          ],
+          "elbowFlip": false
+        },
+        {
+          "name": "Mid",
+          "hand": [
+            12,
+            -7
+          ],
+          "weapon": 0,
+          "front": true,
+          "shoulder": [
+            0,
+            0
+          ],
+          "elbowFlip": false
+        },
+        {
+          "name": "Through",
+          "hand": [
+            19,
+            -6
+          ],
+          "weapon": 0,
+          "front": true,
+          "shoulder": [
+            0,
+            0
+          ],
+          "elbowFlip": false
+        }
+      ]
+    },
+    {
+      "motion": "Smash",
+      "direction": "Right",
+      "curve": "Accelerate",
+      "keys": [
+        {
+          "name": "Loaded",
+          "hand": [
+            -2,
+            12
+          ],
+          "weapon": 110,
+          "front": true,
+          "shoulder": [
+            0,
+            0
+          ],
+          "elbowFlip": false
+        },
+        {
+          "name": "Cocked",
+          "hand": [
+            -4,
+            13
+          ],
+          "weapon": 125,
+          "front": true,
+          "shoulder": [
+            0,
+            0
+          ],
+          "elbowFlip": false
+        },
+        {
+          "name": "Mid",
+          "hand": [
+            13,
+            5
+          ],
+          "weapon": 30,
+          "front": true,
+          "shoulder": [
+            0,
+            0
+          ],
+          "elbowFlip": false
+        },
+        {
+          "name": "Through",
+          "hand": [
+            12,
+            -13
+          ],
+          "weapon": -75,
+          "front": true,
+          "shoulder": [
+            0,
+            0
+          ],
+          "elbowFlip": false
+        }
+      ]
+    },
+    {
+      "motion": "Slash",
+      "direction": "Left",
+      "curve": "Smooth",
+      "keys": [
+        {
+          "name": "Loaded",
+          "hand": [
+            6,
+            7
+          ],
+          "weapon": 30,
+          "front": true,
+          "shoulder": [
+            0,
+            0
+          ],
+          "elbowFlip": false
+        },
+        {
+          "name": "Cocked",
+          "hand": [
+            8,
+            8
+          ],
+          "weapon": 20,
+          "front": true,
+          "shoulder": [
+            0,
+            0
+          ],
+          "elbowFlip": false
+        },
+        {
+          "name": "Mid",
+          "hand": [
+            -15,
+            -6
+          ],
+          "weapon": 175,
+          "front": true,
+          "shoulder": [
+            0,
+            0
+          ],
+          "elbowFlip": false
+        },
+        {
+          "name": "Through",
+          "hand": [
+            -11,
+            -12
+          ],
+          "weapon": 220,
+          "front": true,
+          "shoulder": [
+            0,
+            0
+          ],
+          "elbowFlip": false
+        }
+      ]
+    },
+    {
+      "motion": "Thrust",
+      "direction": "Left",
+      "curve": "Snap",
+      "keys": [
+        {
+          "name": "Loaded",
+          "hand": [
+            4,
+            -9
+          ],
+          "weapon": 180,
+          "front": true,
+          "shoulder": [
+            0,
+            0
+          ],
+          "elbowFlip": false
+        },
+        {
+          "name": "Cocked",
+          "hand": [
+            7,
+            -9
+          ],
+          "weapon": 180,
+          "front": true,
+          "shoulder": [
+            0,
+            0
+          ],
+          "elbowFlip": false
+        },
+        {
+          "name": "Mid",
+          "hand": [
+            -12,
+            -7
+          ],
+          "weapon": 180,
+          "front": true,
+          "shoulder": [
+            0,
+            0
+          ],
+          "elbowFlip": false
+        },
+        {
+          "name": "Through",
+          "hand": [
+            -19,
+            -6
+          ],
+          "weapon": 180,
+          "front": true,
+          "shoulder": [
+            0,
+            0
+          ],
+          "elbowFlip": false
+        }
+      ]
+    },
+    {
+      "motion": "Smash",
+      "direction": "Left",
+      "curve": "Accelerate",
+      "keys": [
+        {
+          "name": "Loaded",
+          "hand": [
+            2,
+            12
+          ],
+          "weapon": 70,
+          "front": true,
+          "shoulder": [
+            0,
+            0
+          ],
+          "elbowFlip": false
+        },
+        {
+          "name": "Cocked",
+          "hand": [
+            4,
+            13
+          ],
+          "weapon": 55,
+          "front": true,
+          "shoulder": [
+            0,
+            0
+          ],
+          "elbowFlip": false
+        },
+        {
+          "name": "Mid",
+          "hand": [
+            -13,
+            5
+          ],
+          "weapon": 150,
+          "front": true,
+          "shoulder": [
+            0,
+            0
+          ],
+          "elbowFlip": false
+        },
+        {
+          "name": "Through",
+          "hand": [
+            -12,
+            -13
+          ],
+          "weapon": 255,
+          "front": true,
+          "shoulder": [
+            0,
+            0
+          ],
+          "elbowFlip": false
+        }
+      ]
+    },
+    {
+      "motion": "Slash",
+      "direction": "Up",
+      "curve": "Smooth",
+      "keys": [
+        {
+          "name": "Loaded",
+          "hand": [
+            11,
+            4
+          ],
+          "weapon": -40,
+          "front": false,
+          "shoulder": [
+            0,
+            0
+          ],
+          "elbowFlip": false
+        },
+        {
+          "name": "Cocked",
+          "hand": [
+            12,
+            6
+          ],
+          "weapon": -55,
+          "front": false,
+          "shoulder": [
+            0,
+            0
+          ],
+          "elbowFlip": false
+        },
+        {
+          "name": "Mid",
+          "hand": [
+            3,
+            13
+          ],
+          "weapon": 95,
+          "front": false,
+          "shoulder": [
+            0,
+            0
+          ],
+          "elbowFlip": false
+        },
+        {
+          "name": "Through",
+          "hand": [
+            -11,
+            8
+          ],
+          "weapon": 165,
+          "front": false,
+          "shoulder": [
+            0,
+            0
+          ],
+          "elbowFlip": false
+        }
+      ]
+    },
+    {
+      "motion": "Thrust",
+      "direction": "Up",
+      "curve": "Snap",
+      "keys": [
+        {
+          "name": "Loaded",
+          "hand": [
+            8,
+            -10
+          ],
+          "weapon": 90,
+          "front": false,
+          "shoulder": [
+            0,
+            -1
+          ],
+          "elbowFlip": false
+        },
+        {
+          "name": "Cocked",
+          "hand": [
+            8,
+            -12
+          ],
+          "weapon": 90,
+          "front": false,
+          "shoulder": [
+            0,
+            -2
+          ],
+          "elbowFlip": false
+        },
+        {
+          "name": "Mid",
+          "hand": [
+            7,
+            6
+          ],
+          "weapon": 90,
+          "front": false,
+          "shoulder": [
+            0,
+            1
+          ],
+          "elbowFlip": false
+        },
+        {
+          "name": "Through",
+          "hand": [
+            6,
+            21
+          ],
+          "weapon": 90,
+          "front": false,
+          "shoulder": [
+            0,
+            3
+          ],
+          "elbowFlip": false
+        }
+      ]
+    },
+    {
+      "motion": "Smash",
+      "direction": "Up",
+      "curve": "Accelerate",
+      "keys": [
+        {
+          "name": "Loaded",
+          "hand": [
+            7,
+            9
+          ],
+          "weapon": -70,
+          "front": false,
+          "shoulder": [
+            0,
+            0
+          ],
+          "elbowFlip": false
+        },
+        {
+          "name": "Cocked",
+          "hand": [
+            6,
+            11
+          ],
+          "weapon": -85,
+          "front": false,
+          "shoulder": [
+            0,
+            0
+          ],
+          "elbowFlip": false
+        },
+        {
+          "name": "Mid",
+          "hand": [
+            9,
+            13
+          ],
+          "weapon": 30,
+          "front": false,
+          "shoulder": [
+            0,
+            0
+          ],
+          "elbowFlip": false
+        },
+        {
+          "name": "Through",
+          "hand": [
+            5,
+            17
+          ],
+          "weapon": 95,
+          "front": false,
+          "shoulder": [
+            0,
+            0
+          ],
+          "elbowFlip": false
+        }
+      ]
+    }
+  ]
+}

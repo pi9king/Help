@@ -1,0 +1,119 @@
+{
+  "cell": 64,
+  "elbowFromShoulder": [
+    1,
+    11
+  ],
+  "gripFromElbow": [
+    2,
+    9
+  ],
+  "upperPivot": [
+    2,
+    2
+  ],
+  "forePivot": [
+    3,
+    0
+  ],
+  "pauldronPivot": [
+    2,
+    2
+  ],
+  "bareUpperPivot": [
+    2,
+    -2
+  ],
+  "jointForePivot": [
+    3,
+    2
+  ],
+  "directions": [
+    {
+      "name": "Down",
+      "mainShoulder": [
+        48,
+        26
+      ],
+      "mainSide": 1,
+      "mainFront": true,
+      "offShoulder": [
+        15,
+        26
+      ],
+      "offSide": -1,
+      "offFront": true
+    },
+    {
+      "name": "Left",
+      "mainShoulder": [
+        37,
+        27
+      ],
+      "mainSide": 1,
+      "mainFront": true,
+      "offShoulder": [
+        27,
+        28
+      ],
+      "offSide": -1,
+      "offFront": false
+    },
+    {
+      "name": "Right",
+      "mainShoulder": [
+        36,
+        28
+      ],
+      "mainSide": 1,
+      "mainFront": true,
+      "offShoulder": [
+        26,
+        27
+      ],
+      "offSide": -1,
+      "offFront": false
+    },
+    {
+      "name": "Up",
+      "mainShoulder": [
+        49,
+        30
+      ],
+      "mainSide": 1,
+      "mainFront": false,
+      "offShoulder": [
+        14,
+        30
+      ],
+      "offSide": -1,
+      "offFront": false
+    }
+  ],
+  "weapons": [
+    {
+      "name": "Sword",
+      "motion": "Slash",
+      "grip": [
+        4,
+        21
+      ]
+    },
+    {
+      "name": "Spear",
+      "motion": "Thrust",
+      "grip": [
+        4,
+        30
+      ]
+    },
+    {
+      "name": "Club",
+      "motion": "Smash",
+      "grip": [
+        4,
+        19
+      ]
+    }
+  ]
+}
